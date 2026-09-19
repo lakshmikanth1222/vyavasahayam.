@@ -465,20 +465,130 @@ class DriedProduct(Base):
 
 
 class DemandRequest(Base):
+    """
+    Core B2B Procurement Demand posted by buyers.
+    Lifecycle: OPEN -> MATCHING -> OFFERS_RECEIVED -> PARTIALLY_FILLED -> FULLY_FILLED -> ORDER_CREATED -> FULFILLED -> EXPIRED / CANCELLED
+    """
     __tablename__ = "demand_requests"
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    buyer_id = Column(String, ForeignKey("users.id"), nullable=False)
-    product_name = Column(String, nullable=False)
-    required_quantity_kg = Column(Float, nullable=False)
-    max_budget_per_kg = Column(Float, nullable=False)
-    required_grade = Column(String, default="GRADE_A")
-    delivery_district = Column(String, default="Krishna")
-    urgency = Column(String, default="HIGH") # IMMEDIATE, WITHIN_24H, WITHIN_3DAYS
-    status = Column(String, default="OPEN") # OPEN, MATCHED, FULFILLED, EXPIRED
+    buyer_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    product_name = Column(String, nullable=False, index=True)
+    required_quantity_kg = Column(Float, nullable=False) # Total kg needed
+    unit = Column(String, default="kg")
+    max_budget_per_kg = Column(Float, nullable=False)    # Max INR/kg buyer will pay
+    required_grade = Column(String, default="GRADE_A")   # GRADE_A, GRADE_B, GRADE_C
+    delivery_district = Column(String, default="Krishna", index=True)
+    delivery_address = Column(String, nullable=True)
+    required_by_date = Column(DateTime, nullable=True)
+    recurring_demand = Column(Boolean, default=False)
+    recurrence_frequency = Column(String, nullable=True) # DAILY, WEEKLY, BIWEEKLY, MONTHLY
+    urgency = Column(String, default="HIGH")             # IMMEDIATE, WITHIN_24H, WITHIN_3DAYS, NORMAL
+    notes = Column(Text, nullable=True)
+    
+    # State tracking
+    status = Column(String, default="OPEN", index=True)  # OPEN, MATCHING, OFFERS_RECEIVED, PARTIALLY_FILLED, FULLY_FILLED, ORDER_CREATED, FULFILLED, EXPIRED, CANCELLED
+    filled_quantity_kg = Column(Float, default=0.0)      # Sum of accepted offer quantities
+    
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+    buyer = relationship("User", foreign_keys=[buyer_id])
+    offers = relationship("DemandOffer", back_populates="demand", cascade="all, delete-orphan")
+    opportunities = relationship("DemandOpportunity", back_populates="demand", cascade="all, delete-orphan")
+    events = relationship("DemandEvent", back_populates="demand", cascade="all, delete-orphan")
+
+
+# Alias Demand to DemandRequest
+Demand = DemandRequest
+
+
+class DemandOpportunity(Base):
+    """
+    Calculated match between a Demand and an eligible Farmer/FPO.
+    Contains transparent multi-factor match score and explainable reasons.
+    """
+    __tablename__ = "demand_opportunities"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    demand_id = Column(String, ForeignKey("demand_requests.id"), nullable=False, index=True)
+    farmer_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    match_score = Column(Float, nullable=False)          # 0.0 to 100.0
+    matched_quantity_kg = Column(Float, default=0.0)     # Capacity farmer can supply
+    estimated_distance_km = Column(Float, default=0.0)
+    estimated_delivery_time = Column(String, default="Within 24 Hours")
+    score_breakdown_json = Column(JSON, nullable=True)   # { product_score, qty_score, grade_score, price_score, dist_score, freshness_score }
+    explanation_json = Column(JSON, nullable=True)       # List of structured bullet reasons
+    status = Column(String, default="NEW", index=True)   # NEW, VIEWED, INTERESTED, OFFERED, ACCEPTED, REJECTED, EXPIRED
     created_at = Column(DateTime, default=get_utc_now)
 
-    buyer = relationship("User")
+    demand = relationship("DemandRequest", back_populates="opportunities")
+    farmer = relationship("User", foreign_keys=[farmer_id])
+
+
+class DemandOffer(Base):
+    """
+    Supply commitment submitted by a Farmer or FPO against a specific Demand.
+    Can be single-farmer or part of multi-farmer FPO aggregation.
+    """
+    __tablename__ = "demand_offers"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    demand_id = Column(String, ForeignKey("demand_requests.id"), nullable=False, index=True)
+    farmer_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    offered_quantity_kg = Column(Float, nullable=False)
+    unit = Column(String, default="kg")
+    expected_price_per_kg = Column(Float, nullable=False)
+    available_date = Column(DateTime, nullable=True)
+    quality_grade = Column(String, default="GRADE_A")
+    listing_id = Column(String, ForeignKey("product_listings.id"), nullable=True)
+    order_id = Column(String, ForeignKey("orders.id"), nullable=True)
+    notes = Column(Text, nullable=True)
+    status = Column(String, default="PENDING", index=True) # PENDING, ACCEPTED, REJECTED, WITHDRAWN, CONVERTED_TO_ORDER
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+    demand = relationship("DemandRequest", back_populates="offers")
+    farmer = relationship("User", foreign_keys=[farmer_id])
+    listing = relationship("ProductListing")
+    order = relationship("Order")
+
+
+class PreOrder(Base):
+    """
+    Consumer pre-order for future harvest batches.
+    Aggregated across consumers into local demand signals.
+    """
+    __tablename__ = "pre_orders"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    consumer_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    product_name = Column(String, nullable=False, index=True)
+    quantity_kg = Column(Float, nullable=False)
+    unit = Column(String, default="kg")
+    requested_date = Column(DateTime, nullable=True)
+    location = Column(String, nullable=False, index=True)
+    max_price_per_kg = Column(Float, nullable=True)
+    notes = Column(Text, nullable=True)
+    status = Column(String, default="PENDING", index=True) # PENDING, MATCHING, CONFIRMED, FULFILLED, CANCELLED
+    created_at = Column(DateTime, default=get_utc_now)
+
+    consumer = relationship("User", foreign_keys=[consumer_id])
+
+
+class DemandEvent(Base):
+    """
+    Domain events log capturing every state transition in the demand-to-supply lifecycle.
+    """
+    __tablename__ = "demand_events"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    demand_id = Column(String, ForeignKey("demand_requests.id"), nullable=False, index=True)
+    event_type = Column(String, nullable=False, index=True) # DEMAND_CREATED, FARMER_NOTIFIED, SUPPLY_OFFER_CREATED, SUPPLY_OFFER_ACCEPTED, DEMAND_PARTIALLY_FILLED, DEMAND_FULLY_FILLED, ORDER_CREATED, FULFILLED
+    payload_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=get_utc_now)
+
+    demand = relationship("DemandRequest", back_populates="events")
 
 
 class MatchResult(Base):
@@ -519,13 +629,16 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     message = Column(Text, nullable=False)
-    notification_type = Column(String, default="INFO") # INFO, WARNING, SUCCESS, URGENT
-    channel = Column(String, default="IN_APP") # IN_APP, SMS, PUSH, VOICE
-    is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=get_utc_now)
+    notification_type = Column(String, default="INFO") # NEW_DEMAND, MATCH_FOUND, OFFER_RECEIVED, OFFER_ACCEPTED, ORDER_CREATED, DELIVERY_UPDATE, PAYMENT_UPDATE, QUALITY_ALERT, FORECAST_OPPORTUNITY
+    channel = Column(String, default="IN_APP")          # IN_APP, SMS, PUSH, VOICE
+    reference_id = Column(String, nullable=True, index=True) # e.g. demand_id, order_id, offer_id
+    action_url = Column(String, nullable=True)          # Deep link e.g. /demand-opportunities
+    data_json = Column(JSON, nullable=True)             # Additional structured metadata
+    is_read = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=get_utc_now, index=True)
 
     user = relationship("User", back_populates="notifications")
 
@@ -541,3 +654,125 @@ class SystemAuditLog(Base):
     details = Column(JSON, nullable=True)
     ip_address = Column(String, default="127.0.0.1")
     created_at = Column(DateTime, default=get_utc_now)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ML DEMAND FORECASTING TABLES
+# ─────────────────────────────────────────────────────────────────────────────
+
+class DemandHistory(Base):
+    """
+    Daily demand time-series per product × location.
+    Populated by:
+      1. The synthetic seeder (2022-2025) for initial ML training.
+      2. Real marketplace orders aggregated nightly via the data pipeline.
+    """
+    __tablename__ = "demand_history"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    date = Column(DateTime, nullable=False, index=True)
+    product_name = Column(String, nullable=False, index=True)
+    location = Column(String, nullable=False, index=True)  # District name
+
+    # Core demand metrics
+    quantity_demanded = Column(Float, default=0.0)   # kg
+    quantity_sold = Column(Float, default=0.0)       # kg
+    order_count = Column(Integer, default=0)
+    revenue = Column(Float, default=0.0)             # INR
+    average_price = Column(Float, default=0.0)       # INR per kg
+
+    # B2B / B2C split
+    b2b_quantity = Column(Float, default=0.0)        # kg
+    b2c_quantity = Column(Float, default=0.0)        # kg
+    b2b_order_count = Column(Integer, default=0)
+    b2c_order_count = Column(Integer, default=0)
+
+    # Time features (precomputed for faster ML feature engineering)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)       # 1–12
+    week_of_year = Column(Integer, nullable=False)
+    day_of_week = Column(Integer, nullable=False) # 0=Monday, 6=Sunday
+
+    # Market context
+    market_price_per_kg = Column(Float, nullable=True)  # Mandi / MSP price that day
+    is_festival_day = Column(Boolean, default=False)
+    festival_name = Column(String, nullable=True)
+
+    data_source = Column(String, default="SYNTHETIC")  # SYNTHETIC, MARKETPLACE, MANUAL
+
+    created_at = Column(DateTime, default=get_utc_now)
+
+
+class ForecastResult(Base):
+    """
+    Cached ML forecast results keyed by product × location × horizon × segment.
+    Each cache entry is valid for 24 hours.
+    """
+    __tablename__ = "forecast_results"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    product_name = Column(String, nullable=False, index=True)
+    location = Column(String, nullable=False)
+    horizon_days = Column(Integer, nullable=False)
+    segment = Column(String, default="ALL")  # ALL, B2B, B2C
+    model_name = Column(String, default="LightGBM")
+
+    # Summary prediction
+    predicted_demand_total = Column(Float, nullable=False)
+    forecast_lower = Column(Float, nullable=False)
+    forecast_upper = Column(Float, nullable=False)
+    trend = Column(String, default="stable")         # increasing, decreasing, stable
+    seasonal_effect = Column(String, default="medium") # low, medium, high
+
+    # B2B/B2C breakdown
+    b2b_demand = Column(Float, nullable=True)
+    b2c_demand = Column(Float, nullable=True)
+
+    # Daily forecast series (JSON list of {date, predicted_quantity})
+    daily_forecast_json = Column(JSON, nullable=True)
+    historical_json = Column(JSON, nullable=True)
+
+    # Feature importance (JSON dict)
+    feature_importance_json = Column(JSON, nullable=True)
+
+    # Seasonal insights (JSON list of strings)
+    seasonal_insights_json = Column(JSON, nullable=True)
+
+    # Supply gap
+    current_supply_kg = Column(Float, nullable=True)
+    demand_gap_kg = Column(Float, nullable=True)
+
+    generated_at = Column(DateTime, default=get_utc_now)
+    expires_at = Column(DateTime, nullable=True)
+
+
+class ModelMetric(Base):
+    """
+    Stores ML model evaluation metrics from the validation set.
+    One row per product × location × training_date.
+    """
+    __tablename__ = "model_metrics"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    product_name = Column(String, nullable=False, index=True)
+    location = Column(String, nullable=False)
+    model_name = Column(String, default="LightGBM")
+
+    # Evaluation metrics (from validation set — never training set)
+    mae = Column(Float, nullable=True)    # Mean Absolute Error (kg)
+    rmse = Column(Float, nullable=True)   # Root Mean Square Error (kg)
+    mape = Column(Float, nullable=True)   # Mean Absolute Percentage Error (%)
+    smape = Column(Float, nullable=True)  # Symmetric MAPE (%)
+    r_squared = Column(Float, nullable=True)
+
+    # Training info
+    train_start_date = Column(String, nullable=True)
+    train_end_date = Column(String, nullable=True)
+    val_start_date = Column(String, nullable=True)
+    val_end_date = Column(String, nullable=True)
+    n_training_samples = Column(Integer, nullable=True)
+    n_features = Column(Integer, nullable=True)
+    data_sufficient = Column(Boolean, default=True)
+
+    model_path = Column(String, nullable=True)  # path to .pkl file
+    trained_at = Column(DateTime, default=get_utc_now)

@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import {
   PlusCircle, Search, Sparkles, CheckCircle2, ArrowRight, ShieldCheck,
-  MapPin, AlertCircle, RefreshCw, Layers, Landmark, Scale, ArrowUpRight, TrendingUp
+  MapPin, AlertCircle, RefreshCw, Layers, Landmark, Scale, Check, X,
+  Clock, Package, DollarSign, UserCheck
 } from 'lucide-react';
 import { FreshnessBadge } from '../../components/common/FreshnessBadge';
-import { GovtPriceComparisonModal } from '../../components/common/GovtPriceComparisonModal';
 import api from '../../services/api';
 
 export const BuyerRequirements = () => {
   const [demands, setDemands] = useState([]);
   const [selectedDemandId, setSelectedDemandId] = useState(null);
+  const [demandDetails, setDemandDetails] = useState(null);
   const [matchData, setMatchData] = useState(null);
-  const [matchingLoading, setMatchingLoading] = useState(false);
+  const [loadingDemands, setLoadingDemands] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [liveBenchmark, setLiveBenchmark] = useState(null);
-  const [selectedGovtProduct, setSelectedGovtProduct] = useState(null);
-  const [govtModalOpen, setGovtModalOpen] = useState(false);
 
   // New demand form
   const [newDemand, setNewDemand] = useState({
-    product_name: 'Hybrid Vine Tomato',
-    required_quantity_kg: 500.0,
-    max_budget_per_kg: 26.0,
+    product_name: 'Tomato',
+    required_quantity_kg: 1000.0,
+    max_budget_per_kg: 28.0,
     required_grade: 'GRADE_A',
     delivery_district: 'Krishna',
-    urgency: 'WITHIN_24H'
+    delivery_address: 'Mandi Road, Benz Circle, Vijayawada',
+    urgency: 'WITHIN_24H',
+    recurring_demand: false,
+    notes: 'Urgent bulk procurement for retail distribution.'
   });
   const [creating, setCreating] = useState(false);
-  const [ordering, setOrdering] = useState(false);
+  const [acceptingOfferId, setAcceptingOfferId] = useState(null);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
   useEffect(() => {
@@ -50,28 +53,39 @@ export const BuyerRequirements = () => {
   }, [newDemand.product_name, newDemand.delivery_district]);
 
   const fetchDemands = async () => {
+    setLoadingDemands(true);
     try {
-      const res = await api.get('/buyers/demand-requests');
-      setDemands(res.data);
-      if (res.data.length > 0 && !selectedDemandId) {
-        loadMatches(res.data[0].id);
+      const res = await api.get('/demands');
+      setDemands(res.data.demands || []);
+      if (res.data.demands?.length > 0 && !selectedDemandId) {
+        loadDemandDetails(res.data.demands[0].id);
       }
     } catch (err) {
       console.error("Demand fetch error:", err);
+    } finally {
+      setLoadingDemands(false);
     }
   };
 
-  const loadMatches = async (demandId) => {
+  const loadDemandDetails = async (demandId) => {
     setSelectedDemandId(demandId);
-    setMatchingLoading(true);
+    setLoadingDetails(true);
     setOrderSuccess(null);
     try {
-      const res = await api.get(`/buyers/demand-requests/${demandId}/matches`);
-      setMatchData(res.data);
+      const res = await api.get(`/demands/${demandId}`);
+      setDemandDetails(res.data.demand || null);
+
+      // Also load legacy match matrix if available
+      try {
+        const matchRes = await api.get(`/buyers/demand-requests/${demandId}/matches`);
+        setMatchData(matchRes.data);
+      } catch (e) {
+        // legacy match fallback
+      }
     } catch (err) {
-      console.error("Match error:", err);
+      console.error("Details error:", err);
     } finally {
-      setMatchingLoading(false);
+      setLoadingDetails(false);
     }
   };
 
@@ -79,33 +93,55 @@ export const BuyerRequirements = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await api.post('/buyers/demand-requests', newDemand);
+      const res = await api.post('/demands', {
+        product_name: newDemand.product_name,
+        required_quantity_kg: parseFloat(newDemand.required_quantity_kg),
+        max_budget_per_kg: parseFloat(newDemand.max_budget_per_kg),
+        required_grade: newDemand.required_grade,
+        delivery_district: newDemand.delivery_district,
+        delivery_address: newDemand.delivery_address,
+        urgency: newDemand.urgency,
+        recurring_demand: newDemand.recurring_demand,
+        notes: newDemand.notes
+      });
       await fetchDemands();
-      loadMatches(res.data.id);
+      if (res.data?.demand?.id) {
+        loadDemandDetails(res.data.demand.id);
+      }
     } catch (err) {
       console.error("Failed to create demand:", err);
+      alert(err.response?.data?.detail || "Failed to create demand.");
     } finally {
       setCreating(false);
     }
   };
 
-  const handlePlaceOrder = async (listingId, quantity) => {
-    setOrdering(true);
+  const handleAcceptOffer = async (offerId) => {
+    if (!selectedDemandId) return;
+    setAcceptingOfferId(offerId);
     setOrderSuccess(null);
     try {
-      const res = await api.post('/buyers/orders', {
-        items: [{ listing_id: listingId, quantity: quantity }],
-        delivery_address: "Mega Mart Warehouse Depot, Benz Circle, Vijayawada",
-        delivery_slot: "Next Morning 6:00 AM Direct Fleet",
-        buyer_notes: "B2B Bulk Procurement via AI Matching Engine"
+      const res = await api.post(`/demands/${selectedDemandId}/offers/${offerId}/accept`, {
+        delivery_address: newDemand.delivery_address
       });
       setOrderSuccess(res.data);
-      if (selectedDemandId) loadMatches(selectedDemandId);
+      loadDemandDetails(selectedDemandId);
+      fetchDemands();
     } catch (err) {
-      console.error("Order error:", err);
-      alert(err.response?.data?.detail || "Order failed");
+      console.error("Failed to accept offer:", err);
+      alert(err.response?.data?.detail || "Failed to accept offer.");
     } finally {
-      setOrdering(false);
+      setAcceptingOfferId(null);
+    }
+  };
+
+  const handleRejectOffer = async (offerId) => {
+    if (!selectedDemandId) return;
+    try {
+      await api.post(`/demands/${selectedDemandId}/offers/${offerId}/reject`);
+      loadDemandDetails(selectedDemandId);
+    } catch (err) {
+      console.error("Failed to reject offer:", err);
     }
   };
 
@@ -113,101 +149,96 @@ export const BuyerRequirements = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-          B2B Procurement Matching Engine
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2">
+        <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs font-bold border border-blue-400/30">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Demand-First Procurement Engine</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-black">
+          Post Bulk Demand & Aggregate Supply
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600">
-          Post your bulk commercial requirements and let our transparent matching algorithm evaluate farmer compatibility across price, grade, proximity, and government APMC market benchmarks.
+        <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
+          Post your commercial requirements. Our engine notifies verified local farmers and FPOs in real-time, aggregates multi-farmer supply commitments, and creates Escrow-secured orders with 1-click acceptance.
         </p>
       </div>
 
       {/* Success Alert */}
       {orderSuccess && (
-        <div className="p-5 rounded-3xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-xs text-emerald-900 animate-fadeIn">
+        <div className="p-5 rounded-3xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-xs text-emerald-900 animate-fadeIn shadow-sm">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
             <div>
-              <strong className="text-sm font-extrabold block">B2B Procurement Order Confirmed!</strong>
-              <p>Order Number: <span className="font-mono font-bold">{orderSuccess.order_number}</span> • Funds held safely in Escrow until delivery acceptance.</p>
+              <strong className="text-sm font-extrabold block">🎉 Supply Offer Accepted! Order Created!</strong>
+              <p>
+                Order Number: <span className="font-mono font-bold text-slate-900">{orderSuccess.order_number}</span> • 
+                Demand status: <span className="font-bold text-emerald-800">{orderSuccess.demand_status}</span> ({orderSuccess.filled_quantity_kg} kg filled, {orderSuccess.remaining_quantity_kg} kg remaining)
+              </p>
             </div>
           </div>
-          <span className="font-extrabold text-sm font-mono text-emerald-800">
-            Total: ₹{orderSuccess.total_amount}
+          <span className="font-extrabold text-xs font-mono text-emerald-800 bg-emerald-100 px-3 py-1 rounded-xl">
+            Escrow Secured
           </span>
         </div>
       )}
 
-      {/* Top Section: Create Demand Form & Demand Tabs */}
+      {/* Top Grid: Post Demand Form & Active Requirements List */}
       <div className="grid lg:grid-cols-12 gap-8">
         
-        {/* Create Demand Form */}
-        <form onSubmit={handleCreateDemand} className="lg:col-span-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        {/* Post Demand Form */}
+        <form onSubmit={handleCreateDemand} className="lg:col-span-6 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-blue-600" />
+              <PlusCircle className="w-5 h-5 text-blue-600" />
               <h3 className="font-extrabold text-sm text-slate-900">Post New Procurement Demand</h3>
             </div>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              Live Mandi Price Sync
+              Auto Farmer Notification
             </span>
           </div>
 
-          <div className="space-y-3 text-xs">
+          <div className="space-y-3.5 text-xs">
             <div>
               <label className="block font-bold text-slate-700 mb-1">Required Produce *</label>
               <select
                 value={newDemand.product_name}
                 onChange={(e) => setNewDemand({ ...newDemand, product_name: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white font-semibold"
               >
-                <option value="Hybrid Vine Tomato">Hybrid Vine Tomato</option>
-                <option value="Guntur Green Chilli">Guntur Green Chilli</option>
-                <option value="Kurnool Rose Onion">Kurnool Rose Onion</option>
-                <option value="Fresh Native Brinjal">Fresh Native Brinjal</option>
-                <option value="Organic Farm Spinach (Palak)">Organic Farm Spinach (Palak)</option>
-                <option value="Farm Fresh Potato">Farm Fresh Potato</option>
-                <option value="Paddy (Dhan)">Paddy (Dhan) - CCEA MSP</option>
-                <option value="Gram (Chana / Chickpea)">Gram (Chana) - CCEA MSP</option>
-                <option value="Red Chilli (Dry)">Red Chilli (Dry) - Guntur Mirchi Yard</option>
-                <option value="Turmeric (Curcuma)">Turmeric (Curcuma) - Duggirala</option>
-                <option value="Groundnut (Peanut)">Groundnut (Peanut) - CCEA MSP</option>
+                <option value="Tomato">Tomato (Hybrid Vine)</option>
+                <option value="Onion">Onion (Kurnool Rose)</option>
+                <option value="Potato">Potato (Farm Fresh)</option>
+                <option value="Green Chilli">Green Chilli (Guntur)</option>
+                <option value="Brinjal">Brinjal (Native)</option>
+                <option value="Spinach">Spinach / Palak</option>
+                <option value="Banana">Banana</option>
+                <option value="Red Chilli (Dry)">Red Chilli (Dry - Guntur Yard)</option>
+                <option value="Turmeric">Turmeric (Duggirala)</option>
+                <option value="Paddy (Dhan)">Paddy (Dhan - MSP)</option>
               </select>
             </div>
 
-            {/* Live Government APMC Benchmark Assistant Card */}
+            {/* Live Mandi Benchmark Assistant */}
             {liveBenchmark && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200 space-y-2">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-slate-50 border border-emerald-200 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-emerald-950 flex items-center gap-1.5">
                     <Landmark className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>Govt APMC Price Benchmark ({liveBenchmark.market_name})</span>
+                    <span>APMC Mandi Modal: ₹{liveBenchmark.govt_modal_price_kg?.toFixed(2)}/kg</span>
                   </span>
-                  <span className="font-mono font-bold text-emerald-900">
-                    ₹{liveBenchmark.govt_modal_price_kg.toFixed(2)}/kg (₹{(liveBenchmark.govt_modal_price_kg * 100).toLocaleString()}/Qtl)
+                  <span className="text-[10px] font-bold text-emerald-800">
+                    Rec Fair: ₹{liveBenchmark.recommended_fair_range?.min} - ₹{liveBenchmark.recommended_fair_range?.max}/kg
                   </span>
                 </div>
-
-                <div className="flex justify-between items-center text-[11px] text-slate-600 pt-1 border-t border-emerald-200/60">
-                  <span>Mandi Spread: <strong>₹{liveBenchmark.govt_min_price_kg} - ₹{liveBenchmark.govt_max_price_kg}/kg</strong></span>
-                  <span>Rec. Fair Bid: <strong className="text-emerald-800">₹{liveBenchmark.recommended_fair_range?.min} - ₹{liveBenchmark.recommended_fair_range?.max}/kg</strong></span>
-                </div>
-
-                {liveBenchmark.msp_applicable && (
-                  <div className="text-[10px] text-blue-800 font-bold bg-blue-100/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-blue-700" />
-                    <span>CCEA Protected Minimum Support Price: ₹{liveBenchmark.msp_rate_kg}/kg (₹{liveBenchmark.msp_rate_kg * 100}/Qtl)</span>
-                  </div>
-                )}
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Required Qty (kg) *</label>
+                <label className="block font-bold text-slate-700 mb-1">Required Quantity (kg) *</label>
                 <input
                   type="number"
                   required
+                  min="50"
                   value={newDemand.required_quantity_kg}
                   onChange={(e) => setNewDemand({ ...newDemand, required_quantity_kg: parseFloat(e.target.value) })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-bold"
@@ -235,215 +266,297 @@ export const BuyerRequirements = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Required Grade</label>
+                <label className="block font-bold text-slate-700 mb-1">Quality Grade</label>
                 <select
                   value={newDemand.required_grade}
                   onChange={(e) => setNewDemand({ ...newDemand, required_grade: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
                 >
                   <option value="GRADE_A">Grade A (Premium Retail)</option>
-                  <option value="GRADE_B">Grade B (Standard Commercial)</option>
-                  <option value="GRADE_C">Grade C (Processing / Bulk)</option>
+                  <option value="GRADE_B">Grade B (Commercial / Processing)</option>
+                  <option value="GRADE_C">Grade C (Bulk Puree / Pulp)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Procurement Urgency</label>
+                <label className="block font-bold text-slate-700 mb-1">Delivery District</label>
                 <select
-                  value={newDemand.urgency}
-                  onChange={(e) => setNewDemand({ ...newDemand, urgency: e.target.value })}
+                  value={newDemand.delivery_district}
+                  onChange={(e) => setNewDemand({ ...newDemand, delivery_district: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
                 >
-                  <option value="IMMEDIATE">Immediate (&lt;12h)</option>
-                  <option value="WITHIN_24H">Within 24 Hours</option>
-                  <option value="WITHIN_3DAYS">Within 3 Days</option>
+                  <option value="Krishna">Krishna (Vijayawada)</option>
+                  <option value="Guntur">Guntur</option>
+                  <option value="East Godavari">East Godavari (Kakinada)</option>
+                  <option value="West Godavari">West Godavari (Eluru)</option>
+                  <option value="Visakhapatnam">Visakhapatnam</option>
+                  <option value="Kurnool">Kurnool</option>
+                  <option value="Kadapa">Kadapa</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Delivery Destination / Warehouse</label>
+              <input
+                type="text"
+                value={newDemand.delivery_address}
+                onChange={(e) => setNewDemand({ ...newDemand, delivery_address: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newDemand.recurring_demand}
+                  onChange={(e) => setNewDemand({ ...newDemand, recurring_demand: e.target.checked })}
+                  className="rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="font-bold text-slate-700">Recurring Weekly Demand</span>
+              </label>
+
+              <select
+                value={newDemand.urgency}
+                onChange={(e) => setNewDemand({ ...newDemand, urgency: e.target.value })}
+                className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[11px]"
+              >
+                <option value="IMMEDIATE">Urgency: Immediate (&lt;12h)</option>
+                <option value="WITHIN_24H">Urgency: Within 24 Hours</option>
+                <option value="WITHIN_3DAYS">Urgency: Within 3 Days</option>
+              </select>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={creating}
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition-all disabled:opacity-50"
+            className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50"
           >
-            {creating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Post Demand & Run AI Matcher</span>}
+            {creating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
+            <span>Post Demand & Notify Matched Farmers</span>
           </button>
         </form>
 
-        {/* Existing Demands List */}
-        <div className="lg:col-span-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="space-y-2">
-            <h3 className="font-extrabold text-sm text-slate-900">Your Active Requirements ({demands.length})</h3>
-            <p className="text-xs text-slate-500">Select any requirement to view live algorithmic supplier rankings</p>
-          </div>
-
-          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-            {demands.map((d) => (
-              <div
-                key={d.id}
-                onClick={() => loadMatches(d.id)}
-                className={`p-3.5 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between ${
-                  selectedDemandId === d.id
-                    ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 shadow-sm'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <strong className="text-sm font-bold text-slate-900">{d.product_name}</strong>
-                    <span className="px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-800 text-[10px]">
-                      {d.required_grade}
-                    </span>
-                  </div>
-                  <p className="text-slate-500 mt-0.5">
-                    Qty: <strong>{d.required_quantity_kg} kg</strong> ({(d.required_quantity_kg / 100).toFixed(1)} Qtl) • Max Budget: <strong>₹{d.max_budget_per_kg}/kg</strong>
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-[11px] font-bold text-blue-700 flex items-center gap-1">
-                    <span>Rankings</span> <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-
-      {/* AI Matches & Transparent Scoring Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-        
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          <div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-extrabold text-slate-900">
-                AI Match Ranking & Government Mandi Arbitrage Matrix
-              </h2>
+        {/* Existing Demands List with Progress Bars */}
+        <div className="lg:col-span-6 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-slate-900">
+                Your Active Procurement Demands ({demands.length})
+              </h3>
+              <button onClick={fetchDemands} className="text-slate-400 hover:text-slate-700">
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingDemands ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Ranked by composite score: Price vs Mandi (25%) + Quantity (20%) + Grade (20%) + Proximity (20%) + Freshness (15%)
+            <p className="text-xs text-slate-500">
+              Select any requirement to review farmer supply offers and track aggregation progress.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
-            <span>Matches Evaluated:</span>
-            <strong className="text-blue-700">{matchData?.matches_count || 0}</strong>
+          <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+            {demands.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs">
+                No procurement demands posted yet. Create your first bulk demand above!
+              </div>
+            ) : (
+              demands.map((d) => {
+                const isSelected = selectedDemandId === d.id;
+                const filled = d.filled_quantity_kg || 0;
+                const total = d.required_quantity_kg || 1;
+                const pct = Math.min(100, Math.round((filled / total) * 100));
+
+                return (
+                  <div
+                    key={d.id}
+                    onClick={() => loadDemandDetails(d.id)}
+                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all space-y-2.5 ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-sm'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm font-bold text-slate-900">{d.product_name}</strong>
+                        <span className="px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-800 text-[10px]">
+                          {d.required_grade}
+                        </span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] ${
+                        d.status === 'FULLY_FILLED'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : d.status === 'PARTIALLY_FILLED'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : d.status === 'OFFERS_RECEIVED'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {d.status}
+                      </span>
+                    </div>
+
+                    {/* Fulfillment Progress Bar */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[11px] text-slate-600">
+                        <span>Fulfillment: <strong>{filled.toLocaleString()} / {total.toLocaleString()} kg</strong></span>
+                        <strong className="text-blue-700">{pct}%</strong>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${
+                            pct >= 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-blue-600' : 'bg-slate-300'
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1">
+                      <span>Max Budget: <strong>₹{d.max_budget_per_kg}/kg</strong></span>
+                      <span>Hub: <strong>{d.delivery_district}</strong></span>
+                      <span className="text-blue-700 font-bold flex items-center gap-1">
+                        <span>{d.offers_count || 0} Offers</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {matchingLoading ? (
-          <div className="py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-            <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
-            <p className="text-xs font-semibold">Running multi-factor compatibility matrix across registered FPOs...</p>
-          </div>
-        ) : matchData && matchData.matches.length > 0 ? (
-          <div className="space-y-4">
-            {matchData.matches.map((m, idx) => {
-              const details = m.match_details;
-              const comm = m.commercial_metrics || {};
+      </div>
 
-              return (
-                <div
-                  key={idx}
-                  className="p-5 rounded-3xl border border-slate-200 hover:border-blue-300 bg-slate-50/50 hover:bg-white transition-all space-y-4 text-xs shadow-sm"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    
+      {/* Bottom Section: Supply Offers & FPO Aggregation Panel */}
+      {demandDetails && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  Incoming Supply Offers for {demandDetails.product_name} (#{demandDetails.id?.substring(0, 8)})
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Review farmer and FPO commitments. Accept offers to aggregate compatible supply into an Escrow-backed order.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs font-mono font-bold">
+              <span className="bg-slate-100 px-3 py-1.5 rounded-xl text-slate-700">
+                Filled: <strong className="text-emerald-700">{demandDetails.filled_quantity_kg} kg</strong>
+              </span>
+              <span className="bg-blue-50 px-3 py-1.5 rounded-xl text-blue-800 border border-blue-200">
+                Remaining: <strong>{demandDetails.remaining_quantity_kg} kg</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Offers List */}
+          {demandDetails.offers?.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 text-xs space-y-2">
+              <Clock className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="font-bold text-slate-600">Waiting for Farmer Supply Offers...</p>
+              <p className="text-slate-400 max-w-sm mx-auto">
+                Eligible farmers and FPOs in {demandDetails.delivery_district} have been notified. Once they submit supply offers, they will appear here for 1-click acceptance.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {demandDetails.offers.map((offer) => {
+                const isAccepted = offer.status === 'ACCEPTED';
+                const isRejected = offer.status === 'REJECTED';
+                const isPending = offer.status === 'PENDING';
+
+                return (
+                  <div
+                    key={offer.id}
+                    className={`p-5 rounded-3xl border transition-all text-xs flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                      isAccepted
+                        ? 'bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-400/30'
+                        : isRejected
+                        ? 'bg-slate-50 border-slate-200 opacity-60'
+                        : 'bg-white border-slate-200 hover:border-blue-300 shadow-sm'
+                    }`}
+                  >
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-base font-extrabold text-slate-900">{m.listing_title}</span>
-                        <FreshnessBadge score={m.freshness_score} size="sm" />
-                        <span className="px-2 py-0.5 rounded font-mono font-bold bg-slate-200 text-slate-800 text-[10px]">
-                          Grade: {m.quality_grade}
+                        <UserCheck className="w-4 h-4 text-emerald-600" />
+                        <span className="font-extrabold text-sm text-slate-900">{offer.farmer_name}</span>
+                        <span className="px-2 py-0.5 rounded font-mono font-bold bg-slate-100 text-slate-800 text-[10px]">
+                          Grade: {offer.quality_grade}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] ${
+                          isAccepted
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : isRejected
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        }`}>
+                          {offer.status}
                         </span>
                       </div>
-                      
-                      <p className="text-slate-500 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Farmer: <strong>{m.farmer_name}</strong> • Location: {m.location} ({details.distance_km} km away)</span>
+
+                      <p className="text-slate-600 flex flex-wrap items-center gap-3">
+                        <span>Offered: <strong className="text-slate-900 font-mono">{offer.offered_quantity_kg} kg</strong></span>
+                        <span>•</span>
+                        <span>Asking Rate: <strong className="text-emerald-700 font-mono">₹{offer.expected_price_per_kg}/kg</strong></span>
+                        <span>•</span>
+                        <span>Total: <strong className="text-slate-900 font-mono">₹{(offer.offered_quantity_kg * offer.expected_price_per_kg).toLocaleString('en-IN')}</strong></span>
                       </p>
-                    </div>
 
-                    {/* Match Score Badge & Order Action */}
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Match Score</span>
-                        <div className="text-2xl font-black text-blue-700 font-mono">
-                          {details.match_score_pct}%
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => handlePlaceOrder(m.listing_id, Math.min(matchData.required_quantity_kg, m.available_quantity))}
-                        disabled={ordering}
-                        className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 transition-all disabled:opacity-50"
-                      >
-                        <span>Procure Batch</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                  </div>
-
-                  {/* 3-Way Government Mandi vs Farmer Asking vs Buyer Budget Comparison */}
-                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    
-                    <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-950">
-                      <span className="text-[10px] font-bold text-emerald-700 block">🌱 Farmer Asking Price</span>
-                      <div className="font-mono font-extrabold text-sm text-emerald-900 mt-0.5">
-                        ₹{m.asking_price}/kg <span className="text-[10px] text-emerald-700 font-normal">(₹{m.asking_price * 100}/Qtl)</span>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
-                      <span className="text-[10px] font-bold text-slate-500 block">🏛️ Govt APMC Modal Rate</span>
-                      <div className="font-mono font-extrabold text-sm text-slate-900 mt-0.5">
-                        ₹{comm.govt_modal_price_kg || '25.0'}/kg <span className="text-[10px] text-slate-500 font-normal">(₹{comm.govt_modal_price_quintal || '2,500'}/Qtl)</span>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-950">
-                      <span className="text-[10px] font-bold text-blue-700 block">🎯 Your Max Budget</span>
-                      <div className="font-mono font-extrabold text-sm text-blue-900 mt-0.5">
-                        ₹{matchData.max_budget_per_kg}/kg <span className="text-[10px] text-blue-700 font-normal">(₹{matchData.max_budget_per_kg * 100}/Qtl)</span>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Transparent Explanation Box */}
-                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-[11px] text-slate-700 font-medium space-y-2 shadow-inner">
-                    <div className="flex items-center justify-between font-bold text-blue-900">
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Transparent Compatibility Matrix:</span>
-                      </div>
-                      {comm.arbitrage_vs_mandi_kg > 0 && (
-                        <span className="text-emerald-700 font-extrabold text-[10px]">
-                          🎉 ₹{comm.arbitrage_vs_mandi_kg}/kg below APMC wholesale spot rate
-                        </span>
+                      {offer.notes && (
+                        <p className="text-slate-500 italic text-[11px]">"{offer.notes}"</p>
                       )}
                     </div>
-                    <p className="text-slate-600 font-mono text-[11px] leading-relaxed">
-                      {details.explanation}
-                    </p>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 self-start md:self-auto">
+                      {isPending && (
+                        <>
+                          <button
+                            onClick={() => handleAcceptOffer(offer.id)}
+                            disabled={acceptingOfferId === offer.id}
+                            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50"
+                          >
+                            {acceptingOfferId === offer.id ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            <span>Accept & Lock Escrow</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleRejectOffer(offer.id)}
+                            className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1 transition-all"
+                          >
+                            <X className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Decline</span>
+                          </button>
+                        </>
+                      )}
+
+                      {isAccepted && (
+                        <div className="text-right">
+                          <span className="text-[10px] text-emerald-800 font-bold block">✓ Order Confirmed</span>
+                          <span className="font-mono text-slate-600 text-[11px]">Order #{offer.order_id?.substring(0, 8)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="py-12 text-center text-slate-400 text-xs">
-            No compatible listings found for this requirement. Try adjusting max budget or quality tolerance.
-          </div>
-        )}
-
-      </div>
+        </div>
+      )}
 
     </div>
   );

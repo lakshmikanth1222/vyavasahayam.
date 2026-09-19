@@ -13,11 +13,15 @@ import { HowItWorks } from './pages/public/HowItWorks';
 import { Traceability } from './pages/public/Traceability';
 import { MarketPricesDashboard } from './pages/public/MarketPricesDashboard';
 import { DemandForecasting } from './pages/public/DemandForecasting';
+import { DemandForecastPage } from './pages/public/DemandForecastPage';
+import { DemandRadarPage } from './pages/public/DemandRadarPage';
+import { NotificationsPage } from './pages/public/NotificationsPage';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 
 // Farmer Pages
 import { FarmerDashboard } from './pages/farmer/FarmerDashboard';
+import { DemandOpportunitiesPage } from './pages/farmer/DemandOpportunitiesPage';
 import { NewListing } from './pages/farmer/NewListing';
 import { FarmerListings } from './pages/farmer/FarmerListings';
 import { FarmerOrders } from './pages/farmer/FarmerOrders';
@@ -64,7 +68,10 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/market-prices" element={<MarketPricesDashboard />} />
+          <Route path="/demand-forecast" element={<DemandForecastPage />} />
           <Route path="/demand-forecasting" element={<DemandForecasting />} />
+          <Route path="/demand-radar" element={<DemandRadarPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/traceability" element={<Traceability />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/cart" element={<Cart />} />
@@ -72,9 +79,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-
           {/* Farmer Routes */}
           <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
+          <Route path="/demand-opportunities" element={<DemandOpportunitiesPage />} />
+          <Route path="/farmer/opportunities" element={<DemandOpportunitiesPage />} />
           <Route path="/farmer/listings" element={<FarmerListings />} />
           <Route path="/farmer/listings/new" element={<NewListing />} />
           <Route path="/farmer/orders" element={<FarmerOrders />} />

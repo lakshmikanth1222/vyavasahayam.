@@ -24,6 +24,12 @@ from app.api.v1.voice import router as voice_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.admin import router as admin_router
 from app.api.v1.forecasting import router as forecasting_router
+from app.api.v1.forecast import router as forecast_router
+from app.api.v1.demands import router as demands_router
+from app.api.v1.notifications import router as notifications_router
+from app.api.v1.preorders import router as preorders_router
+from app.seed.demand_history_seeder import seed_demand_history
+from app.core.database import SessionLocal
 
 # Initialize database schema & seed
 Base.metadata.create_all(bind=engine)
@@ -31,6 +37,13 @@ try:
     seed_database()
 except Exception as e:
     print(f"Seed info: {e}")
+
+try:
+    db_init = SessionLocal()
+    seed_demand_history(db_init)
+    db_init.close()
+except Exception as e:
+    print(f"Demand history seed info: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -61,6 +74,10 @@ app.include_router(escrow_router, prefix=settings.API_V1_STR)
 app.include_router(payments_router, prefix=settings.API_V1_STR)
 app.include_router(market_prices_router, prefix=settings.API_V1_STR)
 app.include_router(forecasting_router, prefix=settings.API_V1_STR)
+app.include_router(forecast_router, prefix=settings.API_V1_STR)
+app.include_router(demands_router, prefix=settings.API_V1_STR)
+app.include_router(notifications_router, prefix=settings.API_V1_STR)
+app.include_router(preorders_router, prefix=settings.API_V1_STR)
 app.include_router(voice_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)

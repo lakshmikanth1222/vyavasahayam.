@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import {
   Sprout, ShoppingCart, LogOut, User, Menu, X, PhoneCall,
-  LayoutDashboard, PlusCircle, Search, FileText, BarChart3, SunMedium, Shield, Landmark
+  LayoutDashboard, PlusCircle, Search, FileText, BarChart3, SunMedium, Shield, Landmark,
+  Bell, Activity, Sparkles
 } from 'lucide-react';
 import { VoiceModal } from './VoiceModal';
+import api from '../../services/api';
 
 export const Navbar = () => {
   const { user, role, isAuthenticated, logout } = useAuth();
@@ -14,6 +16,23 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUnread = async () => {
+        try {
+          const res = await api.get('/notifications/unread-count');
+          setUnreadCount(res.data?.unread_count || 0);
+        } catch (e) {
+          // ignore unauthenticated or background fail
+        }
+      };
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 15000); // 15s poll
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -44,21 +63,28 @@ export const Navbar = () => {
             {/* Main Navigation (Visible on Large Screens) */}
             <nav className="hidden xl:flex items-center gap-2">
               <Link
+                to="/demand-radar"
+                className="px-3 py-2 rounded-xl text-xs font-black text-indigo-950 bg-indigo-50 hover:bg-indigo-100 transition-all flex items-center gap-1.5 border border-indigo-200/80 whitespace-nowrap shadow-xs"
+              >
+                <Activity className="w-3.5 h-3.5 text-indigo-700 animate-pulse flex-shrink-0" />
+                <span>Demand Radar</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              </Link>
+
+              <Link
                 to="/market-prices"
                 className="px-3 py-2 rounded-xl text-xs font-extrabold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 transition-all flex items-center gap-1.5 border border-emerald-200/80 whitespace-nowrap shadow-xs"
               >
                 <Landmark className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
                 <span>Govt Mandi Prices</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </Link>
               
               <Link
-                to="/demand-forecasting"
+                to="/demand-forecast"
                 className="px-3 py-2 rounded-xl text-xs font-extrabold text-teal-900 bg-teal-50 hover:bg-teal-100 transition-all flex items-center gap-1.5 border border-teal-200/80 whitespace-nowrap shadow-xs"
               >
                 <BarChart3 className="w-3.5 h-3.5 text-teal-700 flex-shrink-0" />
-                <span>Demand Forecast</span>
-                <span className="px-1 py-0.2 rounded bg-teal-200 text-teal-950 text-[9px] font-black">AI</span>
+                <span>AI Forecast</span>
               </Link>
               
               <Link
@@ -86,24 +112,41 @@ export const Navbar = () => {
             {/* Right Action Cluster */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               
-              {/* Role Shortcut Button (If Authenticated) */}
-              {isAuthenticated && role === 'FARMER' && (
+              {/* Farmer Demand Opportunities Feed */}
+              {isAuthenticated && (role === 'FARMER' || role === 'FPO') && (
                 <Link
-                  to="/farmer/dashboard"
-                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-800 bg-brand-50 hover:bg-brand-100 border border-brand-200/80 transition-colors whitespace-nowrap"
+                  to="/demand-opportunities"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition-all whitespace-nowrap shadow-xs"
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5 text-brand-600" /> 
-                  <span>Farmer Hub</span>
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Demand Opportunities</span>
                 </Link>
               )}
 
+              {/* Buyer Post Demand Shortcut */}
               {isAuthenticated && role === 'BUYER_B2B' && (
                 <Link
-                  to="/buyer/dashboard"
-                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 transition-colors whitespace-nowrap"
+                  to="/buyer/requirements"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-300 transition-all whitespace-nowrap shadow-xs"
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5 text-blue-600" /> 
-                  <span>B2B Hub</span>
+                  <PlusCircle className="w-3.5 h-3.5 text-blue-700" />
+                  <span>Post Demand</span>
+                </Link>
+              )}
+
+              {/* Notification Center Bell */}
+              {isAuthenticated && (
+                <Link
+                  to="/notifications"
+                  className="relative p-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  title="Notification Center"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Link>
               )}
 
@@ -192,7 +235,7 @@ export const Navbar = () => {
             </Link>
             
             <Link
-              to="/demand-forecasting"
+              to="/demand-forecast"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-sm font-extrabold text-teal-950 bg-teal-50 border border-teal-200"
             >
