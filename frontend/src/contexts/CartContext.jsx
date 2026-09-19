@@ -4,12 +4,20 @@ const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('vyava_cart');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('vyava_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('vyava_cart', JSON.stringify(items));
+    try {
+      localStorage.setItem('vyava_cart', JSON.stringify(items));
+    } catch {
+      // Ignore storage errors in private browsing
+    }
   }, [items]);
 
   const FREE_DELIVERY_THRESHOLD = 500.0;
