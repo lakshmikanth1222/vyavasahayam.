@@ -1,9 +1,9 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/:match*",
       "destination": "/api/index.py"
     },
     {
@@ -19,7 +19,7 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/|docs|redoc|openapi.json).*)",
       "destination": "/index.html"
     }
   ],
