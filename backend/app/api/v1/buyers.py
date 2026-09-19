@@ -12,6 +12,8 @@ from app.schemas.schemas import DemandRequestCreate, DemandRequestOut, MatchResu
 from app.services.matching_service import MatchingEngine
 from app.services.escrow_service import EscrowPaymentService
 
+from app.services.mandi_service import GovtMandiPriceService
+
 router = APIRouter(prefix="/buyers", tags=["B2B Buyer Marketplace"])
 
 @router.get("/marketplace")
@@ -23,7 +25,10 @@ def get_b2b_marketplace(
     min_freshness: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(ProductListing).filter(ProductListing.status == "ACTIVE", ProductListing.available_quantity > 0)
+    query = db.query(ProductListing).filter(
+        ProductListing.status.in_(["ACTIVE", "PARTIALLY_SOLD"]),
+        ProductListing.available_quantity > 0
+    )
     
     if product:
         query = query.filter(ProductListing.title.ilike(f"%{product}%"))
@@ -39,12 +44,68 @@ def get_b2b_marketplace(
     listings = query.order_by(ProductListing.ai_freshness_score.desc()).all()
     results = []
     for l in listings:
+        p_name = l.product.name if l.product else l.title
+        benchmark = GovtMandiPriceService.get_benchmark_for_crop(
+            product_name=p_name,
+            district=l.district or "Krishna"
+        )
+        modal_p = float(benchmark.get("govt_modal_price_kg", l.asking_price))
+        min_p = float(benchmark.get("govt_min_price_kg", modal_p * 0.85))
+        max_p = float(benchmark.get("govt_max_price_kg", modal_p * 1.15))
+        asking_p = float(l.asking_price)
+        qty = float(l.available_quantity)
+
+        # Per unit savings & wholesale volume metrics
+        savings_kg = round(modal_p - asking_p, 2)
+        savings_qtl = round(savings_kg * 100.0, 2)
+        savings_pct = round(((modal_p - asking_p) / modal_p) * 100.0, 1) if modal_p > 0 else 0.0
+        batch_mandi_cost = round(modal_p * qty, 2)
+        batch_asking_cost = round(asking_p * qty, 2)
+        batch_total_savings = round(max(0.0, batch_mandi_cost - batch_asking_cost), 2)
+
+        # MSP compliance check
+        msp_app = benchmark.get("msp_applicable", False)
+        msp_rate = benchmark.get("msp_rate_kg")
+        if msp_app and msp_rate:
+            if asking_p >= msp_rate:
+                msp_status = "MSP_COMPLIANT_FAIR"
+            else:
+                msp_status = "BELOW_MSP_DISTRESS"
+        else:
+            msp_status = "MARKET_DRIVEN"
+
+        govt_comparison = {
+            "commodity_name": benchmark.get("matched_commodity", p_name),
+            "variety": benchmark.get("matched_variety", "Standard Commercial"),
+            "govt_modal_price_kg": modal_p,
+            "govt_min_price_kg": min_p,
+            "govt_max_price_kg": max_p,
+            "govt_modal_price_quintal": round(modal_p * 100.0, 2),
+            "asking_price_quintal": round(asking_p * 100.0, 2),
+            "savings_per_kg": savings_kg,
+            "savings_per_quintal": savings_qtl,
+            "savings_pct": savings_pct,
+            "batch_total_savings": batch_total_savings,
+            "batch_mandi_cost": batch_mandi_cost,
+            "batch_asking_cost": batch_asking_cost,
+            "msp_applicable": msp_app,
+            "msp_rate_kg": msp_rate,
+            "msp_rate_quintal": round(msp_rate * 100.0, 2) if msp_rate else None,
+            "msp_status": msp_status,
+            "market_name": benchmark.get("market_name", "APMC Wholesale Yard"),
+            "district": benchmark.get("district", l.district or "Krishna"),
+            "state": benchmark.get("state", "Andhra Pradesh"),
+            "arrival_date": benchmark.get("arrival_date"),
+            "trend": benchmark.get("trend", "STABLE"),
+            "govt_agency": benchmark.get("govt_agency", "Agmarknet DMI & AP Rythu Bazar")
+        }
+
         results.append({
             "id": l.id,
             "farmer_id": l.farmer_id,
             "farmer_name": l.farmer.full_name if l.farmer else "Local Farmer",
             "product_id": l.product_id,
-            "product_name": l.product.name if l.product else l.title,
+            "product_name": p_name,
             "title": l.title,
             "quantity": l.quantity,
             "available_quantity": l.available_quantity,
@@ -61,7 +122,8 @@ def get_b2b_marketplace(
             "ai_freshness_score": l.ai_freshness_score,
             "ai_freshness_category": l.ai_freshness_category,
             "ai_spoilage_risk_pct": l.ai_spoilage_risk_pct,
-            "ai_visible_defects": l.ai_visible_defects
+            "ai_visible_defects": l.ai_visible_defects,
+            "govt_comparison": govt_comparison
         })
     return results
 
@@ -102,7 +164,16 @@ def get_demand_matches(
     if not demand:
         raise HTTPException(status_code=404, detail="Demand request not found")
 
-    listings = db.query(ProductListing).filter(ProductListing.status == "ACTIVE").all()
+    # Fetch Government APMC Benchmark for this demand's commodity
+    govt_benchmark = GovtMandiPriceService.get_benchmark_for_crop(
+        product_name=demand.product_name,
+        district=demand.delivery_district or "Krishna"
+    )
+
+    listings = db.query(ProductListing).filter(
+        ProductListing.status.in_(["ACTIVE", "PARTIALLY_SOLD"]),
+        ProductListing.available_quantity > 0
+    ).all()
     
     buyer_lat = 16.5150
     buyer_lon = 80.6320
@@ -119,6 +190,14 @@ def get_demand_matches(
             buyer_lon=buyer_lon
         )
         if eval_res["product_match"]:
+            modal_p = float(govt_benchmark.get("govt_modal_price_kg", l.asking_price))
+            asking_p = float(l.asking_price)
+            budget_p = float(demand.max_budget_per_kg)
+            
+            # Commercial Arbitrage
+            arbitrage_vs_mandi = round(modal_p - asking_p, 2)
+            budget_savings = round(budget_p - asking_p, 2)
+
             scored_matches.append({
                 "listing_id": l.id,
                 "listing_title": l.title,
@@ -128,12 +207,21 @@ def get_demand_matches(
                 "available_quantity": l.available_quantity,
                 "unit": l.unit,
                 "asking_price": l.asking_price,
+                "asking_price_quintal": round(asking_p * 100.0, 2),
                 "quality_grade": l.quality_grade,
                 "freshness_score": l.ai_freshness_score,
                 "remaining_shelf_life_days": l.remaining_shelf_life_days,
                 "location": f"{l.village}, {l.district}",
                 "image_url": l.image_url,
-                "match_details": eval_res
+                "match_details": eval_res,
+                "commercial_metrics": {
+                    "govt_modal_price_kg": modal_p,
+                    "govt_modal_price_quintal": round(modal_p * 100.0, 2),
+                    "arbitrage_vs_mandi_kg": arbitrage_vs_mandi,
+                    "budget_savings_per_kg": budget_savings,
+                    "is_below_govt_mandi": asking_p < modal_p,
+                    "is_within_buyer_budget": asking_p <= budget_p
+                }
             })
 
     scored_matches.sort(key=lambda x: x["match_details"]["match_score_pct"], reverse=True)
@@ -143,6 +231,7 @@ def get_demand_matches(
         "required_quantity_kg": demand.required_quantity_kg,
         "max_budget_per_kg": demand.max_budget_per_kg,
         "required_grade": demand.required_grade,
+        "govt_benchmark": govt_benchmark,
         "matches_count": len(scored_matches),
         "matches": scored_matches
     }

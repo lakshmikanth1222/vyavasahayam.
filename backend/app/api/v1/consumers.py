@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -12,7 +13,10 @@ from app.models.models import (
 from app.schemas.schemas import OrderCreate
 from app.services.escrow_service import EscrowPaymentService
 
+from app.services.mandi_service import GovtMandiPriceService
+
 router = APIRouter(prefix="/consumers", tags=["B2C Consumer Marketplace"])
+
 
 @router.get("/products")
 def get_consumer_products(
@@ -21,7 +25,7 @@ def get_consumer_products(
     db: Session = Depends(get_db)
 ):
     query = db.query(ProductListing).filter(
-        ProductListing.status == "ACTIVE",
+        ProductListing.status.in_(["ACTIVE", "PARTIALLY_SOLD"]),
         ProductListing.available_quantity > 0,
         ProductListing.quality_grade != "REJECTED"
     )
@@ -32,11 +36,54 @@ def get_consumer_products(
     listings = query.order_by(ProductListing.ai_freshness_score.desc()).all()
     results = []
     for l in listings:
+        p_name = l.product.name if l.product else l.title
+        benchmark = GovtMandiPriceService.get_benchmark_for_crop(
+            product_name=p_name,
+            district=l.district or "Krishna"
+        )
+        modal_p = float(benchmark.get("govt_modal_price_kg", l.asking_price))
+        min_p = float(benchmark.get("govt_min_price_kg", modal_p * 0.85))
+        max_p = float(benchmark.get("govt_max_price_kg", modal_p * 1.15))
+        effective_p = float(l.discount_price) if (l.discount_price and l.discount_price < l.asking_price) else float(l.asking_price)
+        savings_amt = round(modal_p - effective_p, 2)
+        savings_pct = round(((modal_p - effective_p) / modal_p) * 100, 1) if modal_p > 0 else 0.0
+
+        if savings_amt > 0:
+            comp_status = "BELOW_MANDI"
+            comp_badge = f"₹{savings_amt:.1f}/kg ({savings_pct:.0f}%) below Mandi"
+        elif savings_amt == 0:
+            comp_status = "AT_MANDI"
+            comp_badge = "Mandi Price Parity"
+        else:
+            comp_status = "PREMIUM_GRADE"
+            comp_badge = "Premium Graded Produce"
+
+        govt_comparison = {
+            "commodity_name": benchmark.get("matched_commodity", p_name),
+            "variety": benchmark.get("matched_variety", "Standard"),
+            "govt_modal_price_kg": modal_p,
+            "govt_min_price_kg": min_p,
+            "govt_max_price_kg": max_p,
+            "govt_modal_price_quintal": round(modal_p * 100.0, 2),
+            "savings_per_kg": savings_amt,
+            "savings_pct": savings_pct,
+            "comparison_status": comp_status,
+            "comparison_badge": comp_badge,
+            "market_name": benchmark.get("market_name", "Rythu Bazar / APMC"),
+            "district": benchmark.get("district", l.district or "Krishna"),
+            "state": benchmark.get("state", "Andhra Pradesh"),
+            "arrival_date": benchmark.get("arrival_date"),
+            "trend": benchmark.get("trend", "STABLE"),
+            "msp_applicable": benchmark.get("msp_applicable", False),
+            "msp_rate_kg": benchmark.get("msp_rate_kg"),
+            "govt_agency": benchmark.get("govt_agency", "Agmarknet DMI & AP Rythu Bazar")
+        }
+
         results.append({
             "id": l.id,
             "product_id": l.product_id,
             "title": l.title,
-            "product_name": l.product.name if l.product else l.title,
+            "product_name": p_name,
             "category": l.product.category if l.product else "Fresh Vegetables",
             "quantity": l.quantity,
             "available_quantity": l.available_quantity,
@@ -54,24 +101,33 @@ def get_consumer_products(
             "ai_freshness_score": l.ai_freshness_score,
             "ai_freshness_category": l.ai_freshness_category,
             "ai_spoilage_risk_pct": l.ai_spoilage_risk_pct,
-            "ai_visible_defects": l.ai_visible_defects
+            "ai_visible_defects": l.ai_visible_defects,
+            "govt_comparison": govt_comparison
         })
     return results
 
 @router.post("/cart/calculate")
 def calculate_cart(items: List[dict]):
     """
-    Calculates subtotal, delivery fees, and dynamic discount savings.
+    Calculates subtotal, delivery fees, dynamic discount savings,
+    and total money saved compared to official Government APMC Mandi rates.
     Free delivery when subtotal >= FREE_DELIVERY_MIN_ORDER (e.g. ₹500)
     """
     subtotal = 0.0
     discount_savings = 0.0
+    govt_mandi_subtotal = 0.0
 
     for item in items:
         qty = float(item.get("quantity", 1.0))
         price = float(item.get("asking_price", 30.0))
         disc_price = item.get("discount_price")
+        p_name = item.get("title") or item.get("product_name", "Produce")
         
+        # Look up Govt APMC Benchmark
+        benchmark = GovtMandiPriceService.get_benchmark_for_crop(product_name=p_name)
+        mandi_p = float(benchmark.get("govt_modal_price_kg", price))
+        govt_mandi_subtotal += round(mandi_p * qty, 2)
+
         if disc_price and float(disc_price) < price:
             effective_price = float(disc_price)
             discount_savings += (price - effective_price) * qty
@@ -81,11 +137,17 @@ def calculate_cart(items: List[dict]):
         subtotal += round(effective_price * qty, 2)
 
     subtotal = round(subtotal, 2)
+    govt_mandi_subtotal = round(govt_mandi_subtotal, 2)
+    mandi_savings = max(0.0, round(govt_mandi_subtotal - subtotal, 2))
+    mandi_savings_pct = round((mandi_savings / govt_mandi_subtotal) * 100, 1) if govt_mandi_subtotal > 0 else 0.0
     delivery_fee = 0.0 if subtotal >= settings.FREE_DELIVERY_MIN_ORDER else settings.DEFAULT_DELIVERY_FEE
     total_amount = round(subtotal + delivery_fee, 2)
 
     return {
         "subtotal": subtotal,
+        "govt_mandi_subtotal": govt_mandi_subtotal,
+        "mandi_savings": mandi_savings,
+        "mandi_savings_pct": mandi_savings_pct,
         "delivery_fee": delivery_fee,
         "free_delivery_threshold": settings.FREE_DELIVERY_MIN_ORDER,
         "qualifies_for_free_delivery": subtotal >= settings.FREE_DELIVERY_MIN_ORDER,
@@ -148,17 +210,20 @@ def place_consumer_order(
     # Route through nearest Rythu Bazar hub
     rythu_hub = db.query(CollectionCentre).filter(CollectionCentre.centre_type == "RYTHU_BAZAR").first()
 
+    is_online = data.payment_method == "ONLINE_ESCROW"
+
     order = Order(
-        order_number=f"ORD-B2C-{datetime.now().year}-{int(datetime.now().timestamp()) % 100000}",
+        order_number=f"ORD-B2C-{datetime.now().year}-{uuid.uuid4().hex[:6].upper()}",
         order_type="B2C",
         buyer_id=current_user.id,
         collection_centre_id=rythu_hub.id if rythu_hub else None,
-        status="CONFIRMED",
+        status="PLACED" if is_online else "CONFIRMED",
+
         subtotal=subtotal,
         delivery_fee=delivery_fee,
         total_amount=total_amount,
         payment_method=data.payment_method,
-        payment_status="HELD" if data.payment_method == "ONLINE_ESCROW" else "AUTHORIZED",
+        payment_status="PENDING" if is_online else "AUTHORIZED",
         delivery_address=data.delivery_address,
         delivery_slot=data.delivery_slot or "Today Evening 5:00 PM - 8:00 PM",
         buyer_notes=data.buyer_notes
@@ -181,14 +246,15 @@ def place_consumer_order(
         )
         db.add(oi)
 
-    # Escrow Hold
-    EscrowPaymentService.create_escrow_hold(
-        db=db,
-        order=order,
-        farmer_id=first_farmer_id,
-        gross_amount=subtotal,
-        transport_fee=delivery_fee
-    )
+    # Escrow Hold for COD orders (for online payments, escrow hold is created/confirmed upon Cashfree payment verification)
+    if not is_online:
+        EscrowPaymentService.create_escrow_hold(
+            db=db,
+            order=order,
+            farmer_id=first_farmer_id,
+            gross_amount=subtotal,
+            transport_fee=delivery_fee
+        )
 
     db.commit()
     db.refresh(order)
@@ -199,6 +265,8 @@ def place_consumer_order(
         "order_id": order.id,
         "order_number": order.order_number,
         "total_amount": total_amount,
+        "payment_method": data.payment_method,
+        "payment_status": order.payment_status,
         "delivery_slot": order.delivery_slot,
         "fulfillment_hub": rythu_hub.name if rythu_hub else "Local Rythu Bazar"
     }

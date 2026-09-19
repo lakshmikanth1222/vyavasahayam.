@@ -1,0 +1,39 @@
+# Environment files (Keep secret credentials secure)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Python & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+ENV/
+
+# Node.js & Frontend Build Outputs
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+vyavasahayam.db
+backend/vyavasahayam.db
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

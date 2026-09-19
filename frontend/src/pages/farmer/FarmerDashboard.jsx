@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Tractor, PlusCircle, Package, ShoppingBag, IndianRupee, Sparkles,
-  ArrowRight, ShieldCheck, AlertTriangle, TrendingUp, Clock, Zap, PhoneCall
+  ArrowRight, ShieldCheck, AlertTriangle, TrendingUp, Clock, Zap, PhoneCall,
+  Landmark, RefreshCw, BadgeCheck
 } from 'lucide-react';
 import { FreshnessBadge } from '../../components/common/FreshnessBadge';
 import { DigitalTwinModal } from '../../components/common/DigitalTwinModal';
@@ -13,6 +14,7 @@ export const FarmerDashboard = () => {
   const { user } = useAuth();
   const [listings, setListings] = useState([]);
   const [earnings, setEarnings] = useState(null);
+  const [govtPrices, setGovtPrices] = useState([]);
   const [selectedListing, setSelectedListing] = useState(null);
   const [digitalTwinOpen, setDigitalTwinOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -20,12 +22,14 @@ export const FarmerDashboard = () => {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [listRes, earnRes] = await Promise.all([
+        const [listRes, earnRes, pricesRes] = await Promise.all([
           api.get('/farmers/listings'),
-          api.get('/farmers/earnings')
+          api.get('/farmers/earnings'),
+          api.get('/market-prices/daily')
         ]);
         setListings(listRes.data);
         setEarnings(earnRes.data);
+        setGovtPrices(pricesRes.data?.records || []);
       } catch (err) {
         console.error("Dashboard error:", err);
       } finally {
@@ -34,6 +38,7 @@ export const FarmerDashboard = () => {
     };
     loadDashboardData();
   }, []);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -83,7 +88,7 @@ export const FarmerDashboard = () => {
             <Package className="w-4 h-4 text-brand-600" />
           </div>
           <div className="text-2xl font-extrabold text-slate-900 font-mono">
-            {listings.filter(l => l.status === 'ACTIVE').length}
+            {listings.filter(l => (l.status === 'ACTIVE' || l.status === 'PARTIALLY_SOLD') && l.available_quantity > 0).length}
           </div>
           <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
             <TrendingUp className="w-3 h-3" /> Live on Marketplace
@@ -125,6 +130,72 @@ export const FarmerDashboard = () => {
 
       </div>
 
+      {/* Live Government Fixed / Mandi Rates & MSP Widget */}
+      <div className="bg-white rounded-3xl border border-emerald-200 shadow-sm p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <Landmark className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                Official Govt Mandi & Rythu Bazar Daily Rates (Agmarknet)
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Daily modal and benchmark floor prices reported by Government APMC Mandis & Rythu Bazars
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-mono font-bold text-[10px] border border-emerald-200">
+              Updated Today
+            </span>
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {govtPrices.slice(0, 6).map((gp, idx) => (
+            <div
+              key={idx}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 border border-slate-200/80 hover:border-emerald-300 transition-all space-y-2 text-xs"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 text-sm">{gp.commodity}</h4>
+                  <span className="text-slate-500 text-[10px] block">{gp.variety} • {gp.market}</span>
+                </div>
+                {gp.msp_applicable ? (
+                  <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 font-extrabold text-[9px]">
+                    Govt MSP
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[9px]">
+                    Modal Rate
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-baseline justify-between pt-1 border-t border-slate-100">
+                <div>
+                  <span className="text-slate-400 text-[10px] block">Govt Rate</span>
+                  <span className="font-mono font-extrabold text-emerald-700 text-base">
+                    ₹{gp.modal_price_kg}
+                    <span className="text-[10px] font-normal text-slate-500">/kg</span>
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-400 text-[10px] block">Mandi Band</span>
+                  <span className="font-mono font-bold text-slate-700 text-[11px]">
+                    ₹{gp.min_price_kg} - ₹{gp.max_price_kg}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Produce Listings Table & Freshness Screening */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
@@ -132,6 +203,7 @@ export const FarmerDashboard = () => {
             <h3 className="text-lg font-extrabold text-slate-900">My Farm Listings & Quality Gates</h3>
             <p className="text-xs text-slate-500">Continuous AI Freshness monitoring & Digital Twins</p>
           </div>
+
 
           <Link
             to="/farmer/listings"
@@ -142,7 +214,8 @@ export const FarmerDashboard = () => {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
@@ -201,6 +274,61 @@ export const FarmerDashboard = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Intuitive Card View */}
+        <div className="md:hidden space-y-3">
+          {listings.map((l) => (
+            <div
+              key={l.id}
+              className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-3 text-xs"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={l.image_url || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=100&q=80"}
+                    alt=""
+                    className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                  />
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-sm">{l.title}</h4>
+                    <span className="text-[11px] text-slate-500">Grade: {l.quality_grade} • Shelf-life: {l.remaining_shelf_life_days}d</span>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  l.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {l.status}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-white border border-slate-100 font-mono text-xs">
+                <div>
+                  <span className="text-slate-400 text-[10px] block">Asking Price</span>
+                  <strong className="text-slate-900 font-black">₹{l.asking_price}/{l.unit}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] block">Available</span>
+                  <strong className="text-emerald-700 font-black">{l.available_quantity} {l.unit}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] block">Freshness</span>
+                  <FreshnessBadge score={l.ai_freshness_score} category={l.ai_freshness_category} size="sm" />
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedListing(l);
+                  setDigitalTwinOpen(true);
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Open Digital Twin Telemetry</span>
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

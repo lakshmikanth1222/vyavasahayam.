@@ -29,10 +29,11 @@
                  ┌────────────────────────────────┼────────────────────────────────┐
                  ▼                                ▼                                ▼
     ┌────────────────────────┐      ┌───────────────────────────┐     ┌────────────────────────┐
-    │ Database (PostgreSQL / │      │ AI Services (Freshness    │     │ Mock Integrations Hub  │
-    │ SQLite ORM)            │      │ CV, OpenCV, PyTorch mock) │     │ (Razorpay, Maps, SMS,  │
+    │ Database (PostgreSQL / │      │ AI Services (Freshness    │     │ External Services Hub  │
+    │ SQLite ORM)            │      │ CV, OpenCV, PyTorch mock) │     │ (Cashfree, Maps, SMS,  │
     │ SQLAlchemy 2.0 Models  │      │ Digital Twin Life Cycle   │     │ Voice, Dhenu, Notifs)  │
     └────────────────────────┘      └───────────────────────────┘     └────────────────────────┘
+
 ```
 
 ---

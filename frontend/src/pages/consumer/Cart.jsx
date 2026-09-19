@@ -4,9 +4,10 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Trash2, Plus, Minus, ShoppingBag, Truck, ShieldCheck, ArrowRight,
-  AlertCircle, CheckCircle2, Clock, MapPin, Sparkles, IndianRupee
+  AlertCircle, CheckCircle2, Clock, MapPin, Sparkles, IndianRupee, CreditCard, Lock, Landmark, Scale
 } from 'lucide-react';
 import api from '../../services/api';
+import { initiateCashfreeCheckout } from '../../services/cashfree';
 
 export const Cart = () => {
   const { items, updateQuantity, removeItem, clearCart, subtotal, deliveryFee, totalAmount, freeDeliveryThreshold, isFreeDelivery, amountNeededForFree } = useCart();
@@ -23,6 +24,15 @@ export const Cart = () => {
   const [error, setError] = useState('');
 
   const codEligible = user?.consumer_profile?.cod_eligible !== false;
+
+  // Calculate Government Mandi Benchmarks for the entire cart
+  const govtMandiTotal = items.reduce((acc, item) => {
+    const compModal = Number(item.govt_comparison?.govt_modal_price_kg || item.discount_price || item.asking_price || 30.0);
+    return acc + (compModal * item.quantity);
+  }, 0);
+
+  const mandiSavings = Math.max(0, govtMandiTotal - subtotal);
+  const mandiSavingsPct = govtMandiTotal > 0 ? ((mandiSavings / govtMandiTotal) * 100) : 0;
 
   const handleCheckout = async (e) => {
     e.preventDefault();
@@ -42,16 +52,41 @@ export const Cart = () => {
         buyer_notes: notes || null
       };
 
+      // 1. Place internal Order
       const res = await api.post('/consumers/orders', payload);
+      const placedOrderId = res.data.order_id;
       clearCart();
-      navigate('/orders');
+
+      // 2. If Cash on Delivery, route to My Orders immediately
+      if (paymentMethod === 'COD') {
+        navigate('/orders');
+        return;
+      }
+
+      // 3. If Online Escrow, initialize Cashfree Payment Order
+      const payRes = await api.post('/payments/create-order', {
+        order_id: placedOrderId
+      });
+
+      const { payment_session_id, environment } = payRes.data;
+      if (!payment_session_id) {
+        throw new Error("No payment session returned by payment gateway");
+      }
+
+      // 4. Open Cashfree Web Checkout (UPI, Cards, NetBanking, Wallets)
+      await initiateCashfreeCheckout({
+        paymentSessionId: payment_session_id,
+        environment: environment || 'sandbox',
+        redirectTarget: '_self'
+      });
+
     } catch (err) {
-      console.error("Checkout error:", err);
-      setError(err.response?.data?.detail || "Order submission failed. Please try again.");
-    } finally {
+      console.error("Checkout / Payment error:", err);
+      setError(err.response?.data?.detail || err.message || "Order submission failed. Please try again.");
       setLoading(false);
     }
   };
+
 
   if (items.length === 0) {
     return (
@@ -99,6 +134,32 @@ export const Cart = () => {
         </div>
       </div>
 
+      {/* Government APMC Price Transparency & Savings Banner */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+        <div className="space-y-1 text-center sm:text-left">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+            <Landmark className="w-3 h-3" />
+            <span>Government Mandi Price Benchmark Comparison</span>
+          </div>
+          <h3 className="text-base font-extrabold text-white">
+            {mandiSavings > 0
+              ? `You are saving ₹${mandiSavings.toFixed(2)} (${mandiSavingsPct.toFixed(1)}%) compared to APMC Mandi rates!`
+              : 'Procuring directly at official Government APMC Fair Market Rates!'}
+          </h3>
+          <p className="text-[11px] text-emerald-200">
+            Official Govt APMC Benchmark: <span className="font-mono font-bold line-through text-slate-300">₹{govtMandiTotal.toFixed(2)}</span> • Direct Farm Basket: <span className="font-mono font-bold text-emerald-300">₹{subtotal.toFixed(2)}</span>
+          </p>
+        </div>
+
+        <Link
+          to="/market-prices"
+          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-colors whitespace-nowrap"
+        >
+          <Scale className="w-3.5 h-3.5 text-emerald-400" />
+          <span>View Mandi Bulletin</span>
+        </Link>
+      </div>
+
       {error && (
         <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
@@ -110,61 +171,80 @@ export const Cart = () => {
         
         {/* Cart Items List */}
         <div className="lg:col-span-7 space-y-3">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between gap-4 text-xs"
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="w-16 h-16 rounded-xl object-cover"
-                />
-                <div>
-                  <h4 className="font-extrabold text-sm text-slate-900">{item.title}</h4>
-                  <p className="text-slate-500 text-[11px]">Farmer: {item.farmer_name || 'Local FPO'}</p>
-                  <span className="font-mono font-bold text-slate-900 block mt-1">
-                    ₹{item.discount_price || item.asking_price} / {item.unit}
-                  </span>
+          {items.map((item) => {
+            const itemPrice = Number(item.discount_price || item.asking_price || 0);
+            const mandiModal = Number(item.govt_comparison?.govt_modal_price_kg || itemPrice);
+            const itemSavings = (mandiModal - itemPrice) * item.quantity;
+
+            return (
+              <div
+                key={item.id}
+                className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="w-16 h-16 rounded-xl object-cover"
+                  />
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900">{item.title}</h4>
+                    <p className="text-slate-500 text-[11px]">Farmer: {item.farmer_name || 'Local FPO'}</p>
+                    
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-mono font-bold text-slate-900">
+                        ₹{itemPrice} / {item.unit}
+                      </span>
+                      {mandiModal > itemPrice && (
+                        <span className="text-[10px] text-slate-400 font-mono line-through">
+                          Mandi: ₹{mandiModal}/kg
+                        </span>
+                      )}
+                      {itemSavings > 0 && (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">
+                          Save ₹{itemSavings.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quantity Controls */}
+                <div className="flex items-center justify-between w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
+                  <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="p-1 rounded-lg hover:bg-white text-slate-600 transition-colors"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-8 text-center font-bold font-mono text-slate-900">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="p-1 rounded-lg hover:bg-white text-slate-600 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="text-right min-w-[70px]">
+                    <span className="font-extrabold text-sm text-slate-900 font-mono block">
+                      ₹{itemPrice * item.quantity}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="p-1 rounded-lg hover:bg-white text-slate-600 transition-colors"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-8 text-center font-bold font-mono text-slate-900">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="p-1 rounded-lg hover:bg-white text-slate-600 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="text-right min-w-[70px]">
-                  <span className="font-extrabold text-sm text-slate-900 font-mono block">
-                    ₹{(item.discount_price || item.asking_price) * item.quantity}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Checkout Summary & Payment Options */}
@@ -205,7 +285,12 @@ export const Cart = () => {
 
           {/* Payment Method & Controlled COD */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
-            <span className="block font-bold text-slate-700">Select Payment Mode</span>
+            <div className="flex items-center justify-between">
+              <span className="block font-bold text-slate-700">Select Payment Mode</span>
+              <span className="text-[10px] text-brand-600 font-semibold flex items-center gap-1">
+                <Lock className="w-3 h-3" /> 256-bit Encrypted
+              </span>
+            </div>
             
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -218,9 +303,9 @@ export const Cart = () => {
                 }`}
               >
                 <div className="flex items-center gap-1 font-bold text-slate-900">
-                  <ShieldCheck className="w-4 h-4 text-brand-600" /> Online Escrow
+                  <ShieldCheck className="w-4 h-4 text-brand-600" /> Cashfree Payments
                 </div>
-                <span className="text-[10px] text-slate-500 mt-0.5 block">Held safely till delivery</span>
+                <span className="text-[10px] text-slate-500 mt-0.5 block">UPI, Cards, NetBanking, Escrow</span>
               </button>
 
               <button
@@ -245,12 +330,22 @@ export const Cart = () => {
             </div>
           </div>
 
-          {/* Price Breakdown */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5 pt-3">
+          {/* Price Breakdown with Government Mandi Comparison */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 pt-3">
             <div className="flex justify-between text-slate-600">
-              <span>Produce Subtotal:</span>
-              <span className="font-mono font-bold text-slate-900">₹{subtotal}</span>
+              <span>Govt APMC Mandi Estimate:</span>
+              <span className="font-mono font-bold text-slate-500 line-through">₹{govtMandiTotal.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between text-slate-600">
+              <span>Direct Farm Subtotal:</span>
+              <span className="font-mono font-bold text-slate-900">₹{subtotal.toFixed(2)}</span>
+            </div>
+            {mandiSavings > 0 && (
+              <div className="flex justify-between text-emerald-700 font-bold bg-emerald-100/60 p-1.5 rounded-lg">
+                <span>🎉 Mandi Price Savings:</span>
+                <span className="font-mono">-₹{mandiSavings.toFixed(2)} ({mandiSavingsPct.toFixed(1)}%)</span>
+              </div>
+            )}
             <div className="flex justify-between text-slate-600">
               <span>Delivery Fee:</span>
               <span className="font-mono font-bold text-slate-900">
@@ -259,7 +354,7 @@ export const Cart = () => {
             </div>
             <div className="flex justify-between text-sm font-extrabold text-slate-900 pt-2 border-t border-slate-200">
               <span>Total Payable:</span>
-              <span className="font-mono text-brand-700">₹{totalAmount}</span>
+              <span className="font-mono text-brand-700">₹{totalAmount.toFixed(2)}</span>
             </div>
           </div>
 
@@ -268,8 +363,20 @@ export const Cart = () => {
             disabled={loading}
             className="w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 transition-all disabled:opacity-50"
           >
-            <span>Confirm Order (Escrow Protected)</span>
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <span>Processing Payment Gateway...</span>
+            ) : paymentMethod === 'ONLINE_ESCROW' ? (
+              <>
+                <CreditCard className="w-4 h-4" />
+                <span>Pay Securely with Cashfree (₹{totalAmount})</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                <span>Place Order (Cash on Delivery)</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
@@ -278,3 +385,4 @@ export const Cart = () => {
     </div>
   );
 };
+export default Cart;

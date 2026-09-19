@@ -26,19 +26,26 @@ export const DemoSwitcher = () => {
   };
 
   return (
-    <div className="bg-slate-900 text-slate-200 py-1.5 px-4 text-xs border-b border-slate-800">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider">
-            1-Click Live Demo Role Switcher
-          </span>
-          <span className="hidden sm:inline text-slate-400">Current Role:</span>
-          <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-            {role || 'PUBLIC GUEST'}
-          </span>
+    <div className="bg-slate-950 text-slate-200 py-2 px-4 text-xs border-b border-slate-800/80 shadow-inner">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        
+        {/* Left Indicator */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider border border-emerald-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Interactive Demo Sandbox</span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs">
+            <span className="text-slate-400">Current Persona:</span>
+            <span className="font-extrabold text-white bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700/80 font-mono text-[11px]">
+              {role || 'PUBLIC GUEST'}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        {/* Role Selector Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           {roles.map((item) => {
             const Icon = item.icon;
             const isActive = role === item.key;
@@ -46,10 +53,10 @@ export const DemoSwitcher = () => {
               <button
                 key={item.key}
                 onClick={() => handleSwitch(item)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all font-extrabold text-[11px] whitespace-nowrap active:scale-95 ${
                   isActive
-                    ? 'bg-brand-600 text-white shadow-sm ring-1 ring-white/30'
-                    : 'bg-slate-800 text-slate-300 hover:text-white ' + item.color
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-white/40'
+                    : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800 ' + item.color
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -58,6 +65,7 @@ export const DemoSwitcher = () => {
             );
           })}
         </div>
+
       </div>
     </div>
   );

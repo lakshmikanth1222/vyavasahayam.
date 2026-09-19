@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sprout, Upload, Sparkles, ShieldCheck, ArrowRight, CheckCircle2,
-  AlertTriangle, RefreshCw, Thermometer, Droplets, Zap
+  AlertTriangle, RefreshCw, Thermometer, Droplets, Zap,
+  Landmark, TrendingUp, TrendingDown, Scale, Check
 } from 'lucide-react';
 import { FreshnessBadge } from '../../components/common/FreshnessBadge';
 import api from '../../services/api';
@@ -25,14 +26,39 @@ export const NewListing = () => {
     notes: 'Harvested early morning at 6:30 AM under cool ambient temperature.'
   });
 
+  const [govtBenchmark, setGovtBenchmark] = useState(null);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [screeningResult, setScreeningResult] = useState(null);
   const [screeningLoading, setScreeningLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successData, setSuccessData] = useState(null);
 
+  // Fetch Government Daily Mandi / Rythu Bazar Benchmark on Crop / District selection
+  useEffect(() => {
+    const fetchGovtBenchmark = async () => {
+      setBenchmarkLoading(true);
+      try {
+        const res = await api.get('/market-prices/benchmark', {
+          params: {
+            product_name: formData.product_name,
+            district: formData.district || 'Krishna'
+          }
+        });
+        setGovtBenchmark(res.data);
+      } catch (err) {
+        console.error("Govt benchmark fetch error:", err);
+      } finally {
+        setBenchmarkLoading(false);
+      }
+    };
+
+    fetchGovtBenchmark();
+  }, [formData.product_name, formData.district]);
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
 
   // Run AI Computer Vision Screening
   const runAIScreening = async () => {
@@ -193,6 +219,80 @@ export const NewListing = () => {
                   />
                 </div>
               </div>
+
+              {/* Live Government Fixed / Mandi Market Price Benchmark Card */}
+              {govtBenchmark && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-brand-50 border border-emerald-200 space-y-2 text-xs animate-fadeIn">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-extrabold text-emerald-950 flex items-center gap-1.5">
+                      <Landmark className="w-4 h-4 text-emerald-700" />
+                      <span>Govt Mandi Rate: {govtBenchmark.matched_commodity} ({govtBenchmark.matched_variety})</span>
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-200">
+                        {govtBenchmark.dataset_name?.includes("Variety") ? "Variety-Wise DMI" : "Agmarknet Daily"} ({govtBenchmark.arrival_date})
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500">
+                    Market: <span className="font-bold text-slate-700">{govtBenchmark.market_name}</span> ({govtBenchmark.district}, {govtBenchmark.state})
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 bg-white/80 p-2.5 rounded-xl border border-emerald-100">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Govt Modal Price</span>
+                      <strong className="text-base font-extrabold font-mono text-emerald-700">
+                        ₹{govtBenchmark.govt_modal_price_kg}
+                        <span className="text-[10px] font-normal text-slate-500">/kg</span>
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Official Band</span>
+                      <strong className="text-xs font-bold font-mono text-slate-800">
+                        ₹{govtBenchmark.govt_min_price_kg} – ₹{govtBenchmark.govt_max_price_kg}
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, asking_price: govtBenchmark.govt_modal_price_kg })}
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm transition-all"
+                      >
+                        Apply Govt Rate
+                      </button>
+                    </div>
+                  </div>
+
+
+                  {/* Live Variance Comparison */}
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5">
+                    {formData.asking_price < govtBenchmark.govt_modal_price_kg ? (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <TrendingDown className="w-3.5 h-3.5" />
+                        <span>₹{(govtBenchmark.govt_modal_price_kg - formData.asking_price).toFixed(1)} below Govt Rate (Fast clearance expected)</span>
+                      </span>
+                    ) : formData.asking_price > govtBenchmark.govt_modal_price_kg ? (
+                      <span className="text-amber-700 font-bold flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span>₹{(formData.asking_price - govtBenchmark.govt_modal_price_kg).toFixed(1)} premium over Govt Benchmark</span>
+                      </span>
+                    ) : (
+                      <span className="text-emerald-800 font-bold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Matches Govt Mandi Modal Rate perfectly!</span>
+                      </span>
+                    )}
+
+                    {govtBenchmark.msp_applicable && (
+                      <span className="text-[10px] font-extrabold text-brand-700 bg-brand-100/70 px-2 py-0.5 rounded">
+                        MSP Guaranteed: ₹{govtBenchmark.msp_rate_kg}/kg
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

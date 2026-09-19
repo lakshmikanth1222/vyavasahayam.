@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sprout, ShieldCheck, ArrowRight, Zap, SunMedium, ShoppingBag,
-  Building2, Tractor, CheckCircle2, TrendingUp, Sparkles, Truck, RefreshCw, BarChart2
+  Building2, Tractor, CheckCircle2, TrendingUp, Sparkles, Truck, RefreshCw, BarChart2,
+  Landmark, Flame, BellRing, Calendar, ChevronRight
 } from 'lucide-react';
 import { FreshnessBadge } from '../../components/common/FreshnessBadge';
 import { DigitalTwinModal } from '../../components/common/DigitalTwinModal';
@@ -10,27 +11,98 @@ import api from '../../services/api';
 
 export const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [govtTickers, setGovtTickers] = useState([]);
   const [selectedListing, setSelectedListing] = useState(null);
   const [digitalTwinOpen, setDigitalTwinOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/consumers/products');
-        setFeaturedProducts(res.data.slice(0, 4));
+        const [prodRes, pricesRes] = await Promise.all([
+          api.get('/consumers/products'),
+          api.get('/market-prices/daily')
+        ]);
+        setFeaturedProducts(prodRes.data.slice(0, 4));
+        setGovtTickers(pricesRes.data?.records?.slice(0, 8) || []);
       } catch (err) {
-        console.error("Failed to load featured products:", err);
+        console.error("Home data error:", err);
       }
     };
-    fetchFeatured();
+    fetchData();
   }, []);
 
   return (
-    <div className="space-y-16 pb-20">
+    <div className="space-y-12 pb-24">
       
+      {/* Interactive Live Government APMC Price Ticker */}
+      <div className="bg-slate-900 text-white py-2 px-4 border-b border-emerald-500/30 overflow-hidden shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-extrabold uppercase border border-emerald-500/40 flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Live Mandi Ticker</span>
+          </div>
+
+          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar text-xs font-mono whitespace-nowrap py-0.5">
+            {govtTickers.length > 0 ? (
+              govtTickers.map((t, idx) => (
+                <Link
+                  key={idx}
+                  to="/market-prices"
+                  className="flex items-center gap-2 hover:text-emerald-300 transition-colors group"
+                >
+                  <span className="font-bold text-slate-200">{t.commodity}</span>
+                  <span className="text-slate-400 text-[11px]">({t.market})</span>
+                  <span className="text-emerald-400 font-extrabold">₹{t.modal_price_kg}/kg</span>
+                  <span className="text-slate-600 text-[10px]">|</span>
+                </Link>
+              ))
+            ) : (
+              <span className="text-slate-400 text-xs">Loading live Agmarknet benchmark feeds...</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Cultural Demand Alert Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Link
+          to="/demand-forecasting"
+          className="group block p-4 rounded-3xl bg-gradient-to-r from-amber-900/90 via-orange-900/80 to-slate-900 text-white border border-amber-500/40 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-inner flex-shrink-0">
+                <Flame className="w-5 h-5 text-amber-400 animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                    Cultural Demand Surge Alert
+                  </span>
+                  <span className="px-2 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black uppercase">
+                    Upcoming
+                  </span>
+                </div>
+                <h4 className="font-extrabold text-sm sm:text-base text-white">
+                  Kartheeka Maasam (కార్తీక మాసం) – Vegetarian Demand Spike $+75\%$
+                </h4>
+                <p className="text-xs text-amber-100/80">
+                  Palak, Thotakura, Brinjal, and Raw Banana demand surges for 30 days. Explore sowing schedules & hedging contracts.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-amber-500 text-slate-950 font-black text-xs shadow-md group-hover:bg-amber-400 transition-colors self-start sm:self-auto">
+              <span>View AI Forecast Hub</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </Link>
+      </div>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 bg-gradient-to-b from-brand-50/80 via-emerald-50/40 to-slate-50 border-b border-slate-200/80">
+      <section className="relative overflow-hidden pt-6 pb-16 bg-gradient-to-b from-brand-50/80 via-emerald-50/40 to-slate-50 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
@@ -52,10 +124,10 @@ export const Home = () => {
               </p>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
                 <Link
                   to="/shop"
-                  className="px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/30 flex items-center gap-2 transition-all hover:scale-102"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold text-white bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition-all hover:scale-102 active:scale-95"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Shop Fresh Produce</span>
@@ -63,24 +135,24 @@ export const Home = () => {
                 </Link>
 
                 <Link
-                  to="/farmer/dashboard"
-                  className="px-6 py-3.5 rounded-xl text-sm font-bold text-slate-800 bg-white border border-slate-300 hover:border-brand-500 hover:bg-brand-50/50 shadow-sm flex items-center gap-2 transition-all"
+                  to="/market-prices"
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold text-emerald-800 bg-emerald-100/80 border border-emerald-300 hover:bg-emerald-200/80 shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <Tractor className="w-4 h-4 text-brand-600" />
-                  <span>Farmer Portal</span>
+                  <Landmark className="w-4 h-4 text-emerald-700" />
+                  <span>Live Mandi Rates</span>
                 </Link>
 
                 <Link
-                  to="/buyer/dashboard"
-                  className="px-6 py-3.5 rounded-xl text-sm font-bold text-blue-700 bg-blue-50/80 border border-blue-200 hover:bg-blue-100/80 flex items-center gap-2 transition-all"
+                  to="/demand-forecasting"
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold text-teal-800 bg-teal-100/80 border border-teal-300 hover:bg-teal-200/80 shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <Building2 className="w-4 h-4" />
-                  <span>B2B Procurement</span>
+                  <BarChart2 className="w-4 h-4 text-teal-700" />
+                  <span>Demand Forecasts</span>
                 </Link>
               </div>
 
               {/* Key Trust Metrics */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-200 text-left">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-6 border-t border-slate-200 text-left">
                 <div>
                   <div className="text-2xl font-black text-slate-900 font-mono">100%</div>
                   <div className="text-xs text-slate-500 font-medium">Escrow Protected</div>

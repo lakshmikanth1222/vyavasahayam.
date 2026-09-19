@@ -17,9 +17,12 @@ from app.api.v1.quality import router as quality_router
 from app.api.v1.rescue import router as rescue_router
 from app.api.v1.solar_drying import router as solar_drying_router
 from app.api.v1.escrow import router as escrow_router
+from app.api.v1.payments import router as payments_router
+from app.api.v1.market_prices import router as market_prices_router
 from app.api.v1.voice import router as voice_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.admin import router as admin_router
+from app.api.v1.forecasting import router as forecasting_router
 
 # Initialize database schema & seed
 Base.metadata.create_all(bind=engine)
@@ -54,9 +57,14 @@ app.include_router(quality_router, prefix=settings.API_V1_STR)
 app.include_router(rescue_router, prefix=settings.API_V1_STR)
 app.include_router(solar_drying_router, prefix=settings.API_V1_STR)
 app.include_router(escrow_router, prefix=settings.API_V1_STR)
+app.include_router(payments_router, prefix=settings.API_V1_STR)
+app.include_router(market_prices_router, prefix=settings.API_V1_STR)
+app.include_router(forecasting_router, prefix=settings.API_V1_STR)
 app.include_router(voice_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
+
+
 
 @app.get("/health")
 def health_check():

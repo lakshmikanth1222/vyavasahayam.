@@ -2,13 +2,17 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DemoSwitcher } from './components/common/DemoSwitcher';
 import { Navbar } from './components/common/Navbar';
+import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { DhenuChatWidget } from './components/common/DhenuChatWidget';
+import { FloatingCartCapsule } from './components/common/FloatingCartCapsule';
 import { useAuth } from './contexts/AuthContext';
 
 // Public Pages
 import { Home } from './pages/public/Home';
 import { HowItWorks } from './pages/public/HowItWorks';
 import { Traceability } from './pages/public/Traceability';
+import { MarketPricesDashboard } from './pages/public/MarketPricesDashboard';
+import { DemandForecasting } from './pages/public/DemandForecasting';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 
@@ -28,6 +32,7 @@ import { BuyerRequirements } from './pages/buyer/BuyerRequirements';
 import { Shop } from './pages/consumer/Shop';
 import { Cart } from './pages/consumer/Cart';
 import { MyOrders } from './pages/consumer/MyOrders';
+import { PaymentCallback } from './pages/consumer/PaymentCallback';
 
 // Operator & Delivery
 import { RythuBazarDashboard } from './pages/operator/RythuBazarDashboard';
@@ -58,11 +63,15 @@ export default function App() {
           {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/market-prices" element={<MarketPricesDashboard />} />
+          <Route path="/demand-forecasting" element={<DemandForecasting />} />
           <Route path="/traceability" element={<Traceability />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
 
           {/* Farmer Routes */}
           <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
@@ -97,8 +106,14 @@ export default function App() {
         </Routes>
       </main>
 
+      {/* Floating Instant Cart Capsule (Mobile & Quick View) */}
+      <FloatingCartCapsule />
+
       {/* Floating Dhenu AI Agricultural Advisor */}
       <DhenuChatWidget />
+
+      {/* Intuitive Mobile Bottom Navigation Bar (Visible on mobile < md) */}
+      <MobileBottomNav />
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500">

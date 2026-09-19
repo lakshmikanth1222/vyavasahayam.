@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -241,36 +241,17 @@ def get_farmer_earnings(
         ]
     }
 
+from app.services.demand_forecasting_service import DemandForecastingService
+
 @router.get("/recommendations")
 def get_farmer_crop_recommendations(
+    district: Optional[str] = Query("Krishna", description="Farmer district"),
+    soil_type: Optional[str] = Query("Alluvial / Black Clay", description="Soil type"),
+    acreage: float = Query(2.0, description="Farmer land acreage"),
     current_user: User = Depends(require_auth)
 ):
-    return [
-        {
-            "crop": "Hybrid Tomato (Arka Rakshak)",
-            "season": "Post-Monsoon / Winter",
-            "soil_fit": "Red Loam / Alluvial (Krishna Delta)",
-            "demand_outlook": "VERY HIGH (+35% projected deficit)",
-            "avg_expected_price": "₹28 - ₹34 / kg",
-            "yield_potential": "30 - 35 Tonnes/Acre",
-            "solar_drying_yield": "10% recovery (High value sun-dried flakes backup)"
-        },
-        {
-            "crop": "Guntur Teja Chilli",
-            "season": "Rabi Sowing",
-            "soil_fit": "Black Cotton / Deep Loam",
-            "demand_outlook": "HIGH (Strong spice processor orders)",
-            "avg_expected_price": "₹160 - ₹195 / kg",
-            "yield_potential": "2.5 - 3.0 Tonnes/Acre",
-            "solar_drying_yield": "15% dry yield (Grade A spice export)"
-        },
-        {
-            "crop": "Kurnool Rose Onions",
-            "season": "Late Kharif",
-            "soil_fit": "Well-drained sandy loam",
-            "demand_outlook": "MODERATE TO HIGH",
-            "avg_expected_price": "₹32 - ₹40 / kg",
-            "yield_potential": "10 - 12 Tonnes/Acre",
-            "solar_drying_yield": "12% dehydrated onion flakes"
-        }
-    ]
+    return DemandForecastingService.get_farmer_planting_recommendations(
+        district=district,
+        soil_type=soil_type,
+        acreage=acreage
+    )

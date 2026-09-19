@@ -274,6 +274,51 @@ class Order(Base):
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     escrow = relationship("EscrowTransaction", back_populates="order", uselist=False)
     collection_centre = relationship("CollectionCentre")
+    payments = relationship("Payment", back_populates="order", cascade="all, delete-orphan")
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    order_id = Column(String, ForeignKey("orders.id"), nullable=False, index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    gateway = Column(String, default="cashfree", nullable=False)
+    gateway_order_id = Column(String, nullable=True, index=True)  # Cashfree order ID
+    gateway_payment_id = Column(String, nullable=True, index=True)  # Cashfree cf_payment_id
+    payment_session_id = Column(String, nullable=True, index=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String, default="INR", nullable=False)
+    status = Column(String, default="PAYMENT_PENDING", nullable=False)  # PAYMENT_PENDING, PAYMENT_SUCCESS, PAYMENT_FAILED, PAYMENT_USER_DROPPED, PAYMENT_VERIFICATION_PENDING, REFUND_PENDING, REFUNDED
+    payment_method = Column(String, nullable=True)  # UPI, CARD, NETBANKING, APP, WALLET
+    bank_reference = Column(String, nullable=True)  # UTR / Bank Reference Number
+    auth_id = Column(String, nullable=True)
+    error_code = Column(String, nullable=True)
+    error_description = Column(String, nullable=True)
+    refund_id = Column(String, nullable=True)
+    refund_amount = Column(Float, default=0.0)
+    refund_status = Column(String, nullable=True)
+    raw_response = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+    order = relationship("Order", back_populates="payments")
+    user = relationship("User")
+
+
+class PaymentEvent(Base):
+    __tablename__ = "payment_events"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    gateway = Column(String, default="cashfree", nullable=False)
+    gateway_event_id = Column(String, nullable=True, index=True)
+    order_id = Column(String, nullable=True, index=True)
+    event_type = Column(String, nullable=False)  # e.g., PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK
+    payload_hash = Column(String, unique=True, index=True, nullable=False)
+    raw_payload = Column(JSON, nullable=True)
+    received_at = Column(DateTime, default=get_utc_now)
+    processed_at = Column(DateTime, nullable=True)
+    status = Column(String, default="PROCESSED")  # PROCESSED, FAILED, DUPLICATE_IGNORED
 
 
 class OrderItem(Base):

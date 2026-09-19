@@ -3,5 +3,7 @@ from app.models.models import (
     Product, ProductListing, ProduceBatch, QualityCheck, FreshnessDigitalTwin,
     CollectionCentre, Order, OrderItem, EscrowTransaction,
     RescueEvent, RescueOption, SolarDryingCentre, SolarDryingBatch, DriedProduct,
-    DemandRequest, MatchResult, CustomerFeedback, Notification, SystemAuditLog
+    DemandRequest, MatchResult, CustomerFeedback, Notification, SystemAuditLog,
+    Payment, PaymentEvent
 )
+
