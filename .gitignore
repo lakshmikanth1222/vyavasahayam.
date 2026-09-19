@@ -19,7 +19,6 @@ ENV/
 # Node.js & Frontend Build Outputs
 node_modules/
 frontend/node_modules/
-dist/
 frontend/dist/
 .vite/
 
