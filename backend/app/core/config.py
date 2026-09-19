@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "vyavasahayam-super-secret-production-jwt-key-change-in-env"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
+    VERCEL_URL: str = ""  # Auto-set by Vercel at runtime
     ALGORITHM: str = "HS256"
     
     # Database URL: default to SQLite for instant local zero-config out-of-the-box run, can be switched to PostgreSQL / Neon via .env
@@ -22,15 +23,8 @@ class Settings(BaseSettings):
             return clean_v
         return v
     
-    # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000"
-    ]
+    # CORS — allow all origins in production (Vercel domains vary per deployment)
+    BACKEND_CORS_ORIGINS: List[str] = ["*"]
     
     # Cashfree Payment Gateway Settings
     CASHFREE_ENVIRONMENT: str = "sandbox"  # "sandbox" or "production"
