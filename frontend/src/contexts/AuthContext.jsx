@@ -8,6 +8,12 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('vyava_token') || null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = () => {
+    localStorage.removeItem('vyava_token');
+    setToken(null);
+    setUser(null);
+  };
+
   // Load user profile on mount
   useEffect(() => {
     const fetchMe = async () => {
@@ -62,12 +68,6 @@ export const AuthProvider = ({ children }) => {
     setToken(access_token);
     setUser(userData);
     return userData;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('vyava_token');
-    setToken(null);
-    setUser(null);
   };
 
   // 1-Click quick demo role switcher
