@@ -29,6 +29,7 @@ from app.api.v1.demands import router as demands_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.preorders import router as preorders_router
 from app.seed.demand_history_seeder import seed_demand_history
+from app.seed.infrastructure_seeder import seed_government_infrastructure
 from app.core.database import SessionLocal
 
 # Initialize database schema & seed
@@ -41,9 +42,10 @@ except Exception as e:
 try:
     db_init = SessionLocal()
     seed_demand_history(db_init)
+    seed_government_infrastructure(db_init)
     db_init.close()
 except Exception as e:
-    print(f"Demand history seed info: {e}")
+    print(f"Database initialization info: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

@@ -368,19 +368,29 @@ class RescueEvent(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     batch_id = Column(String, ForeignKey("produce_batches.id"), nullable=True)
     order_id = Column(String, ForeignKey("orders.id"), nullable=True)
+    farmer_id = Column(String, ForeignKey("users.id"), nullable=True)
+    
     product_name = Column(String, nullable=False)
     quantity_kg = Column(Float, nullable=False)
-    trigger_reason = Column(String, nullable=False) # BUYER_CANCELLATION, DELIVERY_DELAY, VEHICLE_BREAKDOWN, ROUTE_DISRUPTION, FRESHNESS_DROP, QUALITY_DROP, SHELF_LIFE_EXPIRED
+    trigger_reason = Column(String, nullable=False) # TRANSPORT_BREAKDOWN, BUYER_CANCELLATION, SHELF_LIFE_CRITICAL, PRICE_CRASH, COLD_CHAIN_FAILURE
     original_route = Column(String, default="Rythu Bazar Hub -> Vijayawada Retail")
+    latitude = Column(Float, default=16.5062)
+    longitude = Column(Float, default=80.6480)
+    location_name = Column(String, default="Krishna District Highway Hub")
+    
     remaining_shelf_life_hours = Column(Float, default=24.0)
     freshness_score = Column(Float, default=70.0)
     quality_grade = Column(String, default="GRADE_B")
     is_safe_for_consumption = Column(Boolean, default=True)
     contamination_flag = Column(Boolean, default=False)
+    
     selected_route = Column(String, nullable=True) # BUYER_SWITCHING, SOLAR_DRYING, COLD_STORAGE, ALTERNATIVE_PROCESSING, SAFE_CATTLE_FEED, WASTE_TO_VALUE_DISPOSAL
+    selected_facility_id = Column(String, nullable=True)
+    selected_facility_name = Column(String, nullable=True)
     status = Column(String, default="INITIATED") # INITIATED, IN_PROGRESS, RESOLVED, FAILED
     resolution_notes = Column(Text, nullable=True)
     resolved_by_user_id = Column(String, nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
@@ -392,15 +402,32 @@ class RescueOption(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     rescue_event_id = Column(String, ForeignKey("rescue_events.id"), nullable=False)
-    channel_type = Column(String, nullable=False) # BUYER_SWITCHING, SOLAR_DRYING, COLD_STORAGE, ALTERNATIVE_PROCESSING, SAFE_CATTLE_FEED, WASTE_TO_VALUE_DISPOSAL
+    tier = Column(Integer, default=1)               # 1=Buyer, 2=Processor, 3=Cold Storage, 4=Solar Drying, 5=Compost
+    channel_type = Column(String, nullable=False)   # BUYER_SWITCHING, ALTERNATIVE_PROCESSING, COLD_STORAGE, SOLAR_DRYING, SAFE_CATTLE_FEED, WASTE_TO_VALUE_DISPOSAL
+    
     target_entity_name = Column(String, nullable=False)
     target_location = Column(String, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    phone = Column(String, nullable=True)
+    
+    facility_id = Column(String, nullable=True)
+    ownership_type = Column(String, nullable=True)  # GOVERNMENT_ASSISTED, GOVERNMENT, PRIVATE, FPO_COOPERATIVE
+    assistance_badge = Column(String, nullable=True) # e.g. "NHB Assisted", "AP Govt", "Private Processor"
+    
     distance_km = Column(Float, default=5.0)
+    estimated_transit_minutes = Column(Float, default=30.0)
     estimated_recovery_value = Column(Float, default=0.0) # In INR
-    viability_score = Column(Float, default=85.0) # 0 to 100
+    recovery_rate_per_kg = Column(Float, default=20.0)       # ₹/kg
+    viability_score = Column(Float, default=85.0)          # 0 to 100
+    
+    availability_status = Column(String, default="CONFIRMED") # CONFIRMED, REQUIRES_CONFIRMATION, UNAVAILABLE
     is_safe = Column(Boolean, default=True)
     safety_verification_notes = Column(Text, default="Meets hygiene and safety parameters.")
+    why_recommended = Column(JSON, nullable=True)            # List of explainable reason strings
+    
     is_selected = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=get_utc_now)
 
     rescue_event = relationship("RescueEvent", back_populates="options")
 
@@ -413,10 +440,17 @@ class SolarDryingCentre(Base):
     location = Column(String, nullable=False)
     district = Column(String, default="Krishna")
     state = Column(String, default="Andhra Pradesh")
+    latitude = Column(Float, default=16.5380)
+    longitude = Column(Float, default=80.7950)
+    phone = Column(String, default="+91 94401 23456")
     capacity_per_day_kg = Column(Float, default=1500.0)
     current_utilization_kg = Column(Float, default=450.0)
     supported_products = Column(String, default="Tomato, Chilli, Mango, Onion, Garlic")
     operating_status = Column(String, default="ACTIVE") # ACTIVE, MAINTENANCE, INACTIVE
+    operator_name = Column(String, default="Siva Prasad (FPO In-Charge)")
+    created_at = Column(DateTime, default=get_utc_now)
+
+    batches = relationship("SolarDryingBatch", back_populates="centre")
 
 
 class SolarDryingBatch(Base):
@@ -426,16 +460,16 @@ class SolarDryingBatch(Base):
     batch_code = Column(String, unique=True, nullable=False) # SDB-2026-TOM-014
     source_batch_id = Column(String, ForeignKey("produce_batches.id"), nullable=True)
     rescue_event_id = Column(String, ForeignKey("rescue_events.id"), nullable=True)
+    drying_centre_id = Column(String, ForeignKey("solar_drying_centres.id"), nullable=False)
     product_name = Column(String, nullable=False)
     input_quantity_kg = Column(Float, nullable=False)
     input_quality_grade = Column(String, default="GRADE_B")
     input_freshness_score = Column(Float, default=74.0)
-    drying_centre_id = Column(String, ForeignKey("solar_drying_centres.id"), nullable=False)
+    expected_output_kg = Column(Float, default=50.0)
+    actual_output_kg = Column(Float, nullable=True)
     start_time = Column(DateTime, default=get_utc_now)
     expected_completion_time = Column(DateTime, nullable=True)
     actual_completion_time = Column(DateTime, nullable=True)
-    estimated_yield_kg = Column(Float, default=50.0) # Approx 10:1 ratio for tomatoes
-    final_output_quantity_kg = Column(Float, nullable=True)
     status = Column(String, default="PREPARING") # CREATED, APPROVED, PREPARING, DRYING, QUALITY_CHECK, COMPLETED, REJECTED
     moisture_level_pct = Column(Float, default=12.0)
     dried_product_sku = Column(String, nullable=True) # SUN-DRIED-TOM-100G
@@ -443,7 +477,7 @@ class SolarDryingBatch(Base):
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
-    drying_centre = relationship("SolarDryingCentre")
+    centre = relationship("SolarDryingCentre", back_populates="batches")
     dried_products = relationship("DriedProduct", back_populates="solar_batch")
 
 
@@ -458,7 +492,7 @@ class DriedProduct(Base):
     unit_cost = Column(Float, default=180.0)
     sale_price = Column(Float, default=320.0) # High value-add margin
     shelf_life_months = Column(Integer, default=12)
-    status = Column(String, default="IN_INVENTORY") # IN_INVENTORY, SOLD, EXPIRED
+    status = Column(String, default="AVAILABLE_FOR_SALE") # AVAILABLE_FOR_SALE, IN_INVENTORY, SOLD, EXPIRED
     created_at = Column(DateTime, default=get_utc_now)
 
     solar_batch = relationship("SolarDryingBatch", back_populates="dried_products")
@@ -776,3 +810,81 @@ class ModelMetric(Base):
 
     model_path = Column(String, nullable=True)  # path to .pkl file
     trained_at = Column(DateTime, default=get_utc_now)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GOVERNMENT INFRASTRUCTURE & POST-HARVEST RESCUE TABLES
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GovernmentInfrastructure(Base):
+    """
+    Government-owned, government-assisted, and registered post-harvest facilities.
+    Sources: National Horticulture Board (NHB), Open Govt Data (data.gov.in),
+             AP Horticulture Department, MoFPI, and WDRA.
+    """
+    __tablename__ = "government_infrastructure"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False, index=True)
+    facility_type = Column(String, nullable=False, index=True)  # COLD_STORAGE, CONTROLLED_ATMOSPHERE, FOOD_PROCESSOR, PULPING_UNIT, DEHYDRATION_UNIT, SOLAR_DRYING, DRY_WAREHOUSE, RURAL_GODOWN, PACK_HOUSE, RIPENING_CHAMBER, BIO_COMPOSTING, CATTLE_FEED_CLUSTER
+    
+    # Ownership vs Assistance distinctions (Critical accuracy requirement)
+    ownership_type = Column(String, nullable=False, default="GOVERNMENT_ASSISTED")  # GOVERNMENT, GOVERNMENT_ASSISTED, GOVERNMENT_SUBSIDIZED, FPO_COOPERATIVE, PRIVATE
+    assistance_type = Column(String, default="NHB_ASSISTED")  # NHB_ASSISTED, AP_HORTICULTURE_SCHEME, MOFPI_ASSISTED, NABARD_RIDF, WDRA_REGISTERED, MIDH_SCHEME, NONE
+    government_scheme = Column(String, nullable=True)         # e.g. "MIDH - Cold Chain Development", "PM Kisan SAMPADA Yojana", "RKVY Infrastructure"
+    ministry = Column(String, default="Ministry of Agriculture & Farmers Welfare")
+
+    # Geographical Location
+    state = Column(String, nullable=False, default="Andhra Pradesh")
+    district = Column(String, nullable=False, index=True)
+    mandal = Column(String, nullable=True)
+    village = Column(String, nullable=True)
+    address = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    
+    # Contact Details
+    phone = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    contact_person = Column(String, nullable=True)
+
+    # Capacity & Specifications
+    capacity_mt = Column(Float, default=1000.0)             # Total capacity in Metric Tons
+    available_capacity_mt = Column(Float, default=250.0)   # Estimated available capacity
+    commodities_supported = Column(JSON, nullable=True)    # e.g. ["Tomato", "Chilli", "Mango", "Onion", "Vegetables"]
+    temperature_range = Column(String, default="0°C to 4°C (85-90% RH)")
+    humidity_control = Column(Boolean, default=True)
+
+    # Status & Live Verification
+    operating_status = Column(String, default="ACTIVE")    # ACTIVE, SEASONAL, MAINTENANCE
+    availability_status = Column(String, default="CONFIRMED")  # CONFIRMED (Live Verified), REQUIRES_CONFIRMATION (Verify upon dispatch), UNAVAILABLE
+    
+    # Registry & Provenance Tracking
+    source = Column(String, default="National Horticulture Board (NHB) - Cold Storage Registry")
+    source_url = Column(String, default="https://nhb.gov.in/ColdStorageRegistry/csrProjectStatusNew.aspx")
+    data_confidence = Column(String, default="HIGH_GOVT_VERIFIED") # HIGH_GOVT_VERIFIED, MEDIUM_PUBLIC_REGISTRY
+    last_verified_at = Column(DateTime, default=get_utc_now)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+
+class InfrastructureSource(Base):
+    """
+    Authoritative government datasets and registry sources feeding the infrastructure layer.
+    """
+    __tablename__ = "infrastructure_sources"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    source_name = Column(String, nullable=False)
+    agency = Column(String, nullable=False)
+    source_type = Column(String, default="WEB_REGISTRY_API")  # WEB_REGISTRY_API, OGD_PORTAL, STATE_HORTICULTURE_PORTAL, CENTRAL_MINISTRY
+    api_url = Column(String, nullable=True)
+    source_url = Column(String, nullable=False)
+    update_frequency = Column(String, default="Weekly")       # Daily, Weekly, Monthly
+    records_count = Column(Integer, default=0)
+    last_sync = Column(DateTime, default=get_utc_now)
+    next_sync = Column(DateTime, default=get_utc_now)
+    status = Column(String, default="ACTIVE")                 # ACTIVE, DEGRADED, PENDING_SYNC
+    created_at = Column(DateTime, default=get_utc_now)
+
+

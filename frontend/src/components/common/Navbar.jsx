@@ -5,7 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import {
   Sprout, ShoppingCart, LogOut, User, Menu, X, PhoneCall,
   LayoutDashboard, PlusCircle, Search, FileText, BarChart3, SunMedium, Shield, Landmark,
-  Bell, Activity, Sparkles
+  Bell, Activity, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { VoiceModal } from './VoiceModal';
 import api from '../../services/api';
@@ -62,6 +62,15 @@ export const Navbar = () => {
 
             {/* Main Navigation (Visible on Large Screens) */}
             <nav className="hidden xl:flex items-center gap-2">
+              <Link
+                to="/rescue"
+                className="px-3 py-2 rounded-xl text-xs font-black text-rose-950 bg-rose-50 hover:bg-rose-100 transition-all flex items-center gap-1.5 border border-rose-200/80 whitespace-nowrap shadow-xs"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-bounce flex-shrink-0" />
+                <span>SOS Rescue</span>
+                <span className="px-1 py-0.2 rounded bg-rose-500 text-[9px] text-white font-black">Govt Infra</span>
+              </Link>
+
               <Link
                 to="/demand-radar"
                 className="px-3 py-2 rounded-xl text-xs font-black text-indigo-950 bg-indigo-50 hover:bg-indigo-100 transition-all flex items-center gap-1.5 border border-indigo-200/80 whitespace-nowrap shadow-xs"

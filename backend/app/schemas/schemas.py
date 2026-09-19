@@ -253,9 +253,16 @@ class OrderOut(BaseModel):
 
 # --- Rescue Engine & Solar Drying ---
 class RescueTriggerRequest(BaseModel):
+    product_name: str = "Tomato"
+    quantity_kg: float = 2000.0
+    latitude: Optional[float] = 16.5062
+    longitude: Optional[float] = 80.6480
+    quality_grade: Optional[str] = "GRADE_B"
+    freshness_score: Optional[float] = 72.0
+    remaining_shelf_life_hours: Optional[float] = 24.0
+    trigger_reason: str = "TRANSPORT_BREAKDOWN" # TRANSPORT_BREAKDOWN, BUYER_CANCELLATION, SHELF_LIFE_CRITICAL, PRICE_CRASH, COLD_CHAIN_FAILURE
     order_id: Optional[str] = None
     batch_id: Optional[str] = None
-    trigger_reason: str # BUYER_CANCELLATION, DELIVERY_DELAY, VEHICLE_BREAKDOWN, FRESHNESS_DROP
     notes: Optional[str] = None
 
 class RescueActionExecute(BaseModel):

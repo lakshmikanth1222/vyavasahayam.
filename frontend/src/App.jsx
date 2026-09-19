@@ -16,6 +16,7 @@ import { DemandForecasting } from './pages/public/DemandForecasting';
 import { DemandForecastPage } from './pages/public/DemandForecastPage';
 import { DemandRadarPage } from './pages/public/DemandRadarPage';
 import { NotificationsPage } from './pages/public/NotificationsPage';
+import { EmergencyRescuePage } from './pages/public/EmergencyRescuePage';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 
@@ -71,6 +72,8 @@ export default function App() {
           <Route path="/demand-forecast" element={<DemandForecastPage />} />
           <Route path="/demand-forecasting" element={<DemandForecasting />} />
           <Route path="/demand-radar" element={<DemandRadarPage />} />
+          <Route path="/rescue" element={<EmergencyRescuePage />} />
+          <Route path="/emergency-rescue" element={<EmergencyRescuePage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/traceability" element={<Traceability />} />
           <Route path="/shop" element={<Shop />} />
