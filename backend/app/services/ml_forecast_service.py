@@ -693,8 +693,8 @@ def generate_forecast(
             model = load_model(product_name, location)
             if model is None:
                 return generate_pure_python_forecast(db, product_name, location, horizon_days, segment, rows)
-    except Exception as e:
-        logger.warning(f"[MLForecast] Falling back to statistical engine: {e}")
+    except (ImportError, ModuleNotFoundError, Exception) as e:
+        logger.info(f"[MLForecast] Using statistical forecasting engine ({e})")
         return generate_pure_python_forecast(db, product_name, location, horizon_days, segment, rows)
 
     # ── 3. Get metrics ───────────────────────────────────────────────────────
