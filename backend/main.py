@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import os
 
 from app.core.config import settings
@@ -81,13 +82,45 @@ def health_check():
         }
     }
 
-@app.get("/")
-def root():
-    return {
-        "message": "Welcome to VyavaSahayam – Fresh Farm-to-Customer Agricultural Marketplace API",
-        "documentation": "/docs",
-        "health": "/health"
-    }
+# Check for compiled frontend dist directory in multiple possible paths
+static_dist_dirs = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dist')),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), 'dist')),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
+]
+
+dist_dir = None
+for d in static_dist_dirs:
+    if os.path.isdir(d):
+        dist_dir = d
+        break
+
+if dist_dir:
+    assets_dir = os.path.join(dist_dir, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api") or full_path.startswith("docs") or full_path.startswith("redoc") or full_path.startswith("openapi.json"):
+            return {"detail": "Not Found"}
+        
+        file_path = os.path.join(dist_dir, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        index_file = os.path.join(dist_dir, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        return {"detail": "Frontend index.html not found"}
+else:
+    @app.get("/")
+    def root():
+        return {
+            "message": "Welcome to VyavaSahayam API",
+            "documentation": "/docs",
+            "health": "/health"
+        }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
