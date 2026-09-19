@@ -33,7 +33,7 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className="space-y-12 pb-24">
+    <div className="space-y-8 sm:space-y-12 pb-24">
       
       {/* Interactive Live Government APMC Price Ticker */}
       <div className="bg-slate-900 text-white py-2 px-4 border-b border-emerald-500/30 overflow-hidden shadow-sm">
@@ -68,33 +68,33 @@ export const Home = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link
           to="/demand-forecasting"
-          className="group block p-4 rounded-3xl bg-gradient-to-r from-amber-900/90 via-orange-900/80 to-slate-900 text-white border border-amber-500/40 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
+          className="group block p-4 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-900/90 via-orange-900/80 to-slate-900 text-white border border-amber-500/40 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-inner flex-shrink-0">
-                <Flame className="w-5 h-5 text-amber-400 animate-bounce" />
+          <div className="flex items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-inner flex-shrink-0">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-bounce" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-300">
                     Cultural Demand Surge Alert
                   </span>
-                  <span className="px-2 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black uppercase">
                     Upcoming
                   </span>
                 </div>
-                <h4 className="font-extrabold text-sm sm:text-base text-white">
-                  Kartheeka Maasam (కార్తీక మాసం) – Vegetarian Demand Spike $+75\%$
+                <h4 className="font-extrabold text-sm sm:text-base text-white mt-0.5">
+                  Kartheeka Maasam (కార్తీక మాసం) – Vegetarian Demand Spike +75%
                 </h4>
-                <p className="text-xs text-amber-100/80">
-                  Palak, Thotakura, Brinjal, and Raw Banana demand surges for 30 days. Explore sowing schedules & hedging contracts.
+                <p className="text-xs text-amber-100/80 mt-0.5 line-clamp-2 sm:line-clamp-none">
+                  Palak, Thotakura, Brinjal, and Raw Banana demand surges for 30 days. Explore sowing schedules &amp; hedging contracts.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-amber-500 text-slate-950 font-black text-xs shadow-md group-hover:bg-amber-400 transition-colors self-start sm:self-auto">
-              <span>View AI Forecast Hub</span>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-amber-500 text-slate-950 font-black text-xs shadow-md group-hover:bg-amber-400 transition-colors flex-shrink-0 self-end sm:self-auto">
+              <span className="hidden sm:inline">View AI Forecast Hub</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -102,7 +102,7 @@ export const Home = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-6 pb-16 bg-gradient-to-b from-brand-50/80 via-emerald-50/40 to-slate-50 border-b border-slate-200/80">
+      <section className="relative overflow-hidden pt-4 sm:pt-6 pb-10 sm:pb-16 bg-gradient-to-b from-brand-50/80 via-emerald-50/40 to-slate-50 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
@@ -169,8 +169,8 @@ export const Home = () => {
 
             </div>
 
-            {/* Visual Hero Interactive Card */}
-            <div className="lg:col-span-5 relative">
+            {/* Visual Hero Interactive Card — hidden on mobile, shown md+ */}
+            <div className="hidden lg:block lg:col-span-5 relative">
               <div className="relative rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-5">
                 
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -261,19 +261,19 @@ export const Home = () => {
 
       {/* 3-Pillar Value Proposition */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-8 sm:mb-12">
           <span className="text-xs font-extrabold uppercase tracking-wider text-brand-700 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
             System Architecture
           </span>
-          <h2 className="text-3xl font-extrabold text-slate-900">
-            How VyavaSahayam Eliminates Intermediaries & Spoilage
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            How VyavaSahayam Eliminates Intermediaries &amp; Spoilage
           </h2>
           <p className="text-sm text-slate-600">
             Traditional agricultural chains take 3-5 days and incur 35-45% middleman markups. Our platform creates a transparent digital loop.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           
           <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
@@ -334,7 +334,7 @@ export const Home = () => {
 
       {/* Fresh Harvest Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
             <h3 className="text-2xl font-extrabold text-slate-900">Today's Fresh Farm Harvests</h3>
             <p className="text-xs text-slate-500">Inspected at Rythu Bazar • Ready for direct delivery</p>

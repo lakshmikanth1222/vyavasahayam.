@@ -8,12 +8,12 @@ export const DemoSwitcher = () => {
   const navigate = useNavigate();
 
   const roles = [
-    { key: 'FARMER', label: 'Farmer / FPO', icon: Tractor, route: '/farmer/dashboard', color: 'hover:bg-emerald-600' },
-    { key: 'BUYER_B2B', label: 'B2B Buyer', icon: Building2, route: '/buyer/dashboard', color: 'hover:bg-blue-600' },
-    { key: 'CONSUMER_B2C', label: 'Consumer', icon: ShoppingBag, route: '/shop', color: 'hover:bg-amber-600' },
-    { key: 'COLLECTION_CENTER', label: 'Rythu Bazar', icon: Store, route: '/operator/dashboard', color: 'hover:bg-teal-600' },
-    { key: 'DELIVERY_PARTNER', label: 'Delivery', icon: Truck, route: '/delivery/dashboard', color: 'hover:bg-indigo-600' },
-    { key: 'ADMIN', label: 'Admin', icon: ShieldAlert, route: '/admin/dashboard', color: 'hover:bg-purple-600' },
+    { key: 'FARMER', label: 'Farmer / FPO', shortLabel: 'Farmer', icon: Tractor, route: '/farmer/dashboard', color: 'hover:bg-emerald-600' },
+    { key: 'BUYER_B2B', label: 'B2B Buyer', shortLabel: 'B2B', icon: Building2, route: '/buyer/dashboard', color: 'hover:bg-blue-600' },
+    { key: 'CONSUMER_B2C', label: 'Consumer', shortLabel: 'Buyer', icon: ShoppingBag, route: '/shop', color: 'hover:bg-amber-600' },
+    { key: 'COLLECTION_CENTER', label: 'Rythu Bazar', shortLabel: 'Rythu', icon: Store, route: '/operator/dashboard', color: 'hover:bg-teal-600' },
+    { key: 'DELIVERY_PARTNER', label: 'Delivery', shortLabel: 'Delivery', icon: Truck, route: '/delivery/dashboard', color: 'hover:bg-indigo-600' },
+    { key: 'ADMIN', label: 'Admin', shortLabel: 'Admin', icon: ShieldAlert, route: '/admin/dashboard', color: 'hover:bg-purple-600' },
   ];
 
   const handleSwitch = async (item) => {
@@ -26,26 +26,20 @@ export const DemoSwitcher = () => {
   };
 
   return (
-    <div className="bg-slate-950 text-slate-200 py-2 px-4 text-xs border-b border-slate-800/80 shadow-inner">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <div className="bg-slate-950 text-slate-200 py-1.5 px-3 sm:px-4 text-xs border-b border-slate-800/80 shadow-inner">
+      <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3">
         
         {/* Left Indicator */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider border border-emerald-500/30">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-black text-[9px] sm:text-[10px] uppercase tracking-wider border border-emerald-500/30 whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Interactive Demo Sandbox</span>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-1.5 text-xs">
-            <span className="text-slate-400">Current Persona:</span>
-            <span className="font-extrabold text-white bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700/80 font-mono text-[11px]">
-              {role || 'PUBLIC GUEST'}
-            </span>
+            <span className="hidden xs:inline">Interactive Demo</span>
+            <span className="xs:hidden">Demo</span>
           </div>
         </div>
 
         {/* Role Selector Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1">
           {roles.map((item) => {
             const Icon = item.icon;
             const isActive = role === item.key;
@@ -53,14 +47,15 @@ export const DemoSwitcher = () => {
               <button
                 key={item.key}
                 onClick={() => handleSwitch(item)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all font-extrabold text-[11px] whitespace-nowrap active:scale-95 ${
+                className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-xl transition-all font-extrabold text-[10px] sm:text-[11px] whitespace-nowrap active:scale-95 flex-shrink-0 ${
                   isActive
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-white/40'
                     : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800 ' + item.color
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
+                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="sm:hidden">{item.shortLabel}</span>
+                <span className="hidden sm:inline">{item.label}</span>
               </button>
             );
           })}

@@ -24,7 +24,7 @@ export const Navbar = () => {
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
             
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
@@ -110,10 +110,10 @@ export const Navbar = () => {
               {/* Farmer Voice IVR Telephony Simulation */}
               <button
                 onClick={() => setVoiceModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-xs font-bold transition-all whitespace-nowrap active:scale-95 shadow-xs"
+                className="p-2 sm:px-3 sm:py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-xs font-bold transition-all whitespace-nowrap active:scale-95 shadow-xs inline-flex items-center gap-1.5"
                 title="Simulate Voice IVR for Farmers (Telugu / Hindi / English)"
               >
-                <PhoneCall className="w-3.5 h-3.5 text-amber-600 animate-pulse flex-shrink-0" />
+                <PhoneCall className="w-4 h-4 text-amber-600 animate-pulse flex-shrink-0" />
                 <span className="hidden sm:inline">Kisan Voice IVR</span>
               </button>
 
@@ -154,13 +154,13 @@ export const Navbar = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors whitespace-nowrap"
+                    className="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors whitespace-nowrap"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm shadow-brand-600/20 transition-all whitespace-nowrap"
+                    className="hidden sm:inline-flex px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm shadow-brand-600/20 transition-all whitespace-nowrap"
                   >
                     Register
                   </Link>
