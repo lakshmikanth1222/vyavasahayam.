@@ -38,14 +38,16 @@ class CashfreePaymentService:
     @classmethod
     def is_live_configured(cls) -> bool:
         """Checks if real Cashfree credentials are configured rather than placeholders."""
-        client_id = settings.CASHFREE_CLIENT_ID or ""
-        secret = settings.CASHFREE_CLIENT_SECRET or ""
+        client_id = (settings.CASHFREE_CLIENT_ID or "").lower()
+        secret = (settings.CASHFREE_CLIENT_SECRET or "").lower()
         is_placeholder = (
-            "TEST10000" in client_id or
+            "test10000" in client_id or
             "00000000" in secret or
-            "your_client_id" in client_id or
-            len(client_id) < 5 or
-            len(secret) < 5
+            "your_" in client_id or
+            "your_" in secret or
+            "placeholder" in client_id or
+            len(client_id) < 10 or
+            len(secret) < 10
         )
         return not is_placeholder and not settings.MOCK_PAYMENT
 
