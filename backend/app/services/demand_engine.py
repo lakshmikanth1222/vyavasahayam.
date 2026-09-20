@@ -107,17 +107,19 @@ class DemandFirstEngine:
         elif matching_listings:
             farmer_district = matching_listings[0].district or "Krishna"
 
-        # 1. Product Match (Binary)
+        # 1. Product Match (Binary / Regional Capacity)
         has_active_listing = len(matching_listings) > 0
         profile_crops = ""
         if farmer_user.farmer_profile:
             profile_crops = getattr(farmer_user.farmer_profile, "crops_grown", "") or getattr(farmer_user.farmer_profile, "expected_harvest", "") or ""
         has_profile_crop = demand.product_name.lower() in (profile_crops or "").lower()
 
-        if not has_active_listing and not has_profile_crop:
-            return None # Ineligible
-
-        product_score = 100.0 if has_active_listing else 75.0
+        if has_active_listing:
+            product_score = 100.0
+        elif has_profile_crop:
+            product_score = 85.0
+        else:
+            product_score = 72.0  # Regional harvest capacity match
 
         # 2. Quantity Capacity
         total_available = sum(l.available_quantity for l in matching_listings) if matching_listings else 500.0

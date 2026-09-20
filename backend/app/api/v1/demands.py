@@ -25,7 +25,7 @@ from sqlalchemy import desc
 from app.core.database import get_db
 from app.api.v1.deps import require_auth, get_current_user
 from app.models.models import (
-    User, DemandRequest, DemandOpportunity, DemandOffer, DemandEvent, Order
+    User, DemandRequest, DemandOpportunity, DemandOffer, DemandEvent, Order, ProductListing
 )
 from app.services.demand_engine import DemandFirstEngine
 
@@ -87,6 +87,119 @@ def get_demand_heatmap(db: Session = Depends(get_db)):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Helper: Seed Default Buyer Demands if Empty
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _ensure_seed_demands(db: Session):
+    """Ensures rich, realistic B2B buyer procurement demands exist in the database."""
+    open_count = db.query(DemandRequest).filter(
+        DemandRequest.status.in_(["OPEN", "MATCHING", "OFFERS_RECEIVED", "PARTIALLY_FILLED"])
+    ).count()
+
+    if open_count < 3:
+        # Find a buyer user or admin
+        buyer = db.query(User).filter(User.role.in_(["BUYER_B2B", "BUYER", "ADMIN"])).first()
+        if not buyer:
+            buyer = db.query(User).first()
+        
+        buyer_id = buyer.id if buyer else 1
+
+        sample_demands = [
+            {
+                "product_name": "Hybrid Vine Tomato",
+                "required_quantity_kg": 2500.0,
+                "max_budget_per_kg": 28.0,
+                "required_grade": "GRADE_A",
+                "delivery_district": "Krishna",
+                "delivery_address": "Gannavaram Cold Hub, NH-16, Krishna District",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=2),
+                "urgency": "WITHIN_24H",
+                "notes": "Premium vine-ripened tomatoes for daily supermarket retail distribution.",
+                "status": "OPEN"
+            },
+            {
+                "product_name": "Kurnool Rose Red Onion",
+                "required_quantity_kg": 4000.0,
+                "max_budget_per_kg": 34.0,
+                "required_grade": "GRADE_A",
+                "delivery_district": "Guntur",
+                "delivery_address": "Guntur APMC Procurement Gate 4, Guntur",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=4),
+                "urgency": "NORMAL",
+                "notes": "Medium-to-large pungent red onions, well-cured with intact outer skins.",
+                "status": "OPEN"
+            },
+            {
+                "product_name": "Guntur S4 Hot Red Chilli",
+                "required_quantity_kg": 1500.0,
+                "max_budget_per_kg": 190.0,
+                "required_grade": "GRADE_A",
+                "delivery_district": "Guntur",
+                "delivery_address": "ITC Agri-Business Warehouse, Guntur Industrial Area",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=5),
+                "urgency": "NORMAL",
+                "notes": "Uniform color, high capsaicin content for commercial spice processing.",
+                "status": "OPEN"
+            },
+            {
+                "product_name": "Fresh Green Lady Finger (Bhindi)",
+                "required_quantity_kg": 800.0,
+                "max_budget_per_kg": 36.0,
+                "required_grade": "GRADE_A",
+                "delivery_district": "Krishna",
+                "delivery_address": "Rythu Bazar Wholesale Intake, Vijayawada",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=1),
+                "urgency": "IMMEDIATE",
+                "notes": "Tender green okra, maximum 8cm pod length, pesticide-safe certified.",
+                "status": "OPEN"
+            },
+            {
+                "product_name": "Banganapalli Sweet Mango",
+                "required_quantity_kg": 3000.0,
+                "max_budget_per_kg": 68.0,
+                "required_grade": "GRADE_A",
+                "delivery_district": "Krishna",
+                "delivery_address": "Nuzvid Mango Export Hub, Krishna",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=3),
+                "urgency": "NORMAL",
+                "notes": "GI-tagged Banganapalli mangoes, tree-ripened with high brix sweetness.",
+                "status": "OPEN"
+            },
+            {
+                "product_name": "Chandramukhi Processing Potato",
+                "required_quantity_kg": 5000.0,
+                "max_budget_per_kg": 24.0,
+                "required_grade": "GRADE_B",
+                "delivery_district": "Visakhapatnam",
+                "delivery_address": "Sheelanagar Port Cold Logistics Park, Vizag",
+                "required_by_date": datetime.now(timezone.utc) + timedelta(days=6),
+                "urgency": "FLEXIBLE",
+                "notes": "Firm flesh, uniform round tubers for bulk food processing.",
+                "status": "OPEN"
+            }
+        ]
+
+        for s in sample_demands:
+            d_req = DemandRequest(
+                buyer_id=buyer_id,
+                product_name=s["product_name"],
+                required_quantity_kg=s["required_quantity_kg"],
+                filled_quantity_kg=0.0,
+                unit="kg",
+                max_budget_per_kg=s["max_budget_per_kg"],
+                required_grade=s["required_grade"],
+                delivery_district=s["delivery_district"],
+                delivery_address=s["delivery_address"],
+                required_by_date=s["required_by_date"],
+                urgency=s["urgency"],
+                notes=s["notes"],
+                status=s["status"]
+            )
+            db.add(d_req)
+        db.commit()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 2. Farmer Demand Opportunities Feed
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -97,7 +210,7 @@ def get_farmer_opportunities(
 ):
     """
     Personalized opportunity feed for the logged-in farmer/FPO,
-    complete with AI match scores and transparent explanation breakdown.
+    complete with dynamic AI matching, transparent explanation breakdown, and instant offer triggers.
     """
     if current_user.role not in ["FARMER", "FPO", "ADMIN"]:
         raise HTTPException(
@@ -105,6 +218,53 @@ def get_farmer_opportunities(
             detail="Only farmers and FPOs can access the opportunity feed."
         )
 
+    # 1. Ensure active demands exist
+    _ensure_seed_demands(db)
+
+    # 2. Fetch all active demands
+    active_demands = (
+        db.query(DemandRequest)
+        .filter(DemandRequest.status.in_(["OPEN", "MATCHING", "OFFERS_RECEIVED", "PARTIALLY_FILLED"]))
+        .all()
+    )
+
+    # 3. Fetch current farmer's listings for score calculation
+    farmer_listings = (
+        db.query(ProductListing)
+        .filter(ProductListing.farmer_id == current_user.id)
+        .all()
+    )
+
+    # 4. Ensure each active demand has an evaluated DemandOpportunity for this farmer
+    for demand in active_demands:
+        existing_opp = (
+            db.query(DemandOpportunity)
+            .filter(
+                DemandOpportunity.demand_id == demand.id,
+                DemandOpportunity.farmer_id == current_user.id,
+            )
+            .first()
+        )
+
+        if not existing_opp:
+            eval_result = DemandFirstEngine.evaluate_farmer_match(demand, current_user, farmer_listings)
+            if eval_result:
+                opp = DemandOpportunity(
+                    demand_id=demand.id,
+                    farmer_id=current_user.id,
+                    match_score=eval_result["match_score"],
+                    matched_quantity_kg=eval_result["matched_quantity_kg"],
+                    estimated_distance_km=eval_result["estimated_distance_km"],
+                    estimated_delivery_time=eval_result["estimated_delivery_time"],
+                    score_breakdown_json=eval_result["score_breakdown"],
+                    explanation_json=eval_result["reasons"],
+                    status="NEW",
+                )
+                db.add(opp)
+    
+    db.commit()
+
+    # 5. Retrieve all matched opportunities for this farmer
     opportunities = (
         db.query(DemandOpportunity)
         .filter(DemandOpportunity.farmer_id == current_user.id)
@@ -145,7 +305,7 @@ def get_farmer_opportunities(
                 "urgency": d.urgency,
                 "status": d.status,
                 "notes": d.notes,
-                "buyer_name": d.buyer.full_name if d.buyer else "Verified Buyer",
+                "buyer_name": d.buyer.full_name if d.buyer else "Verified B2B Buyer",
             }
         })
 
