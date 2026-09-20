@@ -120,7 +120,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs w-full max-w-full overflow-hidden">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs w-full max-w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4 lg:gap-6">
             
@@ -177,8 +177,8 @@ export const Navbar = () => {
               <div className="relative" ref={aiDropdownRef}>
                 <button
                   type="button"
-                  onClick={() => setAiDropdownOpen(!aiDropdownOpen)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  onClick={() => setAiDropdownOpen(prev => !prev)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
                     isAiSectionActive || aiDropdownOpen
                       ? 'bg-teal-50 text-teal-900 font-extrabold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
@@ -190,16 +190,17 @@ export const Navbar = () => {
                 </button>
 
                 {aiDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-72 rounded-2xl bg-white shadow-xl border border-slate-100 py-2.5 z-50 animate-fadeIn">
+                  <div className="absolute left-0 mt-2 w-80 rounded-2xl bg-white shadow-2xl border border-slate-200 py-2.5 z-50 animate-fadeIn">
                     <div className="px-3.5 pb-2 mb-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Predictive Intelligence & Trust
                     </div>
 
                     <Link
                       to="/demand-forecast"
+                      onClick={() => setAiDropdownOpen(false)}
                       className="flex items-start gap-3 px-3.5 py-2.5 hover:bg-teal-50/70 transition-colors group"
                     >
-                      <div className="p-2 rounded-xl bg-teal-100 text-teal-700 group-hover:scale-105 transition-transform mt-0.5">
+                      <div className="p-2 rounded-xl bg-teal-100 text-teal-700 group-hover:scale-105 transition-transform mt-0.5 flex-shrink-0">
                         <BarChart3 className="w-4 h-4" />
                       </div>
                       <div>
@@ -207,15 +208,33 @@ export const Navbar = () => {
                           AI Demand Forecast
                           <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-teal-100 text-teal-800">AI</span>
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">Predictive crop pricing & harvesting trends</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Predictive crop pricing &amp; harvesting trends</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/demand-forecasting"
+                      onClick={() => setAiDropdownOpen(false)}
+                      className="flex items-start gap-3 px-3.5 py-2.5 hover:bg-amber-50/70 transition-colors group"
+                    >
+                      <div className="p-2 rounded-xl bg-amber-100 text-amber-800 group-hover:scale-105 transition-transform mt-0.5 flex-shrink-0">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          12-Month Demand Matrix
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-100 text-amber-800">Festive</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Seasonal surge curves (Kartheeka, Diwali, Sankranti)</p>
                       </div>
                     </Link>
 
                     <Link
                       to="/demand-radar"
+                      onClick={() => setAiDropdownOpen(false)}
                       className="flex items-start gap-3 px-3.5 py-2.5 hover:bg-indigo-50/70 transition-colors group"
                     >
-                      <div className="p-2 rounded-xl bg-indigo-100 text-indigo-700 group-hover:scale-105 transition-transform mt-0.5">
+                      <div className="p-2 rounded-xl bg-indigo-100 text-indigo-700 group-hover:scale-105 transition-transform mt-0.5 flex-shrink-0">
                         <Activity className="w-4 h-4" />
                       </div>
                       <div>
@@ -229,22 +248,24 @@ export const Navbar = () => {
 
                     <Link
                       to="/traceability"
+                      onClick={() => setAiDropdownOpen(false)}
                       className="flex items-start gap-3 px-3.5 py-2.5 hover:bg-slate-50 transition-colors group"
                     >
-                      <div className="p-2 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform mt-0.5">
+                      <div className="p-2 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform mt-0.5 flex-shrink-0">
                         <QrCode className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-900">Farm Traceability</div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">Transparent origin & QR batch tracking</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Transparent origin &amp; QR batch tracking</p>
                       </div>
                     </Link>
 
                     <Link
                       to="/how-it-works"
+                      onClick={() => setAiDropdownOpen(false)}
                       className="flex items-start gap-3 px-3.5 py-2.5 hover:bg-slate-50 transition-colors group"
                     >
-                      <div className="p-2 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform mt-0.5">
+                      <div className="p-2 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform mt-0.5 flex-shrink-0">
                         <HelpCircle className="w-4 h-4" />
                       </div>
                       <div>
@@ -567,6 +588,18 @@ export const Navbar = () => {
                   <span>AI Demand Forecasting</span>
                 </div>
                 <span className="px-1.5 py-0.2 rounded bg-teal-600 text-white text-[9px] font-black">AI</span>
+              </Link>
+
+              <Link
+                to="/demand-forecasting"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold text-amber-950 bg-amber-50 border border-amber-200"
+              >
+                <div className="flex items-center gap-2.5">
+                  <TrendingUp className="w-4 h-4 text-amber-700" />
+                  <span>12-Month Cultural Demand Matrix</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 text-[9px] font-black">Festive</span>
               </Link>
 
               <Link
