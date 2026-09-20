@@ -38,25 +38,41 @@ export const AdminDashboard = () => {
             Platform Operations & Loss Prevention
           </h1>
           <p className="text-xs sm:text-sm text-purple-200 max-w-xl">
-            Real-time telemetry across farmer onboarding, Rythu Bazar hubs, Escrow settlements, and zero-waste Solar Drying rescue operations.
+            Real-time telemetry across farmer onboarding, Rythu Bazar hubs, Escrow settlements, and zero-waste SOS Rescue & Govt Solar Drying Infrastructure.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            to="/rescue"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/30 transition-all border border-rose-500"
+            title="Public Government Cold-Chain & Distress SOS Rescue Network"
+          >
+            <AlertTriangle className="w-4 h-4 text-white animate-pulse" />
+            <span>SOS Rescue (Govt Infra)</span>
+            <span className="px-1.5 py-0.2 rounded bg-white text-rose-900 text-[9px] font-black uppercase">
+              Govt Infra
+            </span>
+          </Link>
+
           <Link
             to="/admin/rescue"
             className="px-4 py-2.5 rounded-xl bg-solar-500 hover:bg-solar-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all"
+            title="Admin Emergency Rescue Operations"
           >
             <Zap className="w-4 h-4 text-slate-950" />
-            <span>Rescue Engine Console</span>
+            <span>SOS Rescue Control</span>
           </Link>
+
           <Link
             to="/admin/solar-drying"
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-all"
+            title="Govt Solar Drying Processing Facilities"
           >
             <SunMedium className="w-4 h-4 text-amber-300" />
-            <span>Solar Drying Facility</span>
+            <span>Govt Solar Drying Infra</span>
           </Link>
+
           <Link
             to="/admin/settings"
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all"
@@ -142,33 +158,39 @@ export const AdminDashboard = () => {
         
         <Link
           to="/admin/rescue"
-          className="p-6 rounded-3xl bg-gradient-to-br from-solar-900 to-slate-900 text-white shadow-md hover:scale-102 transition-all space-y-3"
+          className="p-6 rounded-3xl bg-gradient-to-br from-rose-950 via-slate-900 to-slate-950 text-white shadow-md hover:scale-102 transition-all space-y-3 border border-rose-900/30"
         >
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-solar-400" />
+          <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5" />
           </div>
-          <h4 className="font-extrabold text-base">Multi-Tier Rescue Engine</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-extrabold text-base">SOS Rescue & Govt Infra</h4>
+            <span className="px-1.5 py-0.2 rounded bg-rose-600 text-[9px] font-black uppercase text-white">Govt</span>
+          </div>
           <p className="text-xs text-slate-300">
-            Audit active disruption events, route buyer switching, and inspect safe biocontainment rules.
+            Audit active disruption events, route buyer switching, and utilize government cold-storage & rescue infrastructure.
           </p>
-          <span className="text-xs font-bold text-solar-300 flex items-center gap-1 pt-1">
-            <span>Manage Rescues</span> <ArrowRight className="w-3.5 h-3.5" />
+          <span className="text-xs font-bold text-rose-300 flex items-center gap-1 pt-1">
+            <span>Manage SOS Rescues</span> <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </Link>
 
         <Link
           to="/admin/solar-drying"
-          className="p-6 rounded-3xl bg-gradient-to-br from-emerald-900 to-slate-900 text-white shadow-md hover:scale-102 transition-all space-y-3"
+          className="p-6 rounded-3xl bg-gradient-to-br from-amber-950 via-slate-900 to-slate-950 text-white shadow-md hover:scale-102 transition-all space-y-3 border border-amber-900/30"
         >
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-            <SunMedium className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <SunMedium className="w-5 h-5" />
           </div>
-          <h4 className="font-extrabold text-base">Solar Drying Operations</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-extrabold text-base">Govt Solar Drying Units</h4>
+            <span className="px-1.5 py-0.2 rounded bg-amber-600 text-[9px] font-black uppercase text-white">Zero Waste</span>
+          </div>
           <p className="text-xs text-slate-300">
-            Monitor active drying tunnels, rack moisture levels, and value-added dried product SKU inventory.
+            Monitor active zero-waste drying tunnels, rack moisture levels, and value-added dried product SKU inventory.
           </p>
-          <span className="text-xs font-bold text-emerald-300 flex items-center gap-1 pt-1">
-            <span>View Drying Batches</span> <ArrowRight className="w-3.5 h-3.5" />
+          <span className="text-xs font-bold text-amber-300 flex items-center gap-1 pt-1">
+            <span>View Solar Drying Infra</span> <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </Link>
 
