@@ -3,7 +3,8 @@ import {
   Bot, X, Send, Sparkles, Sprout, MessageSquare, ChevronRight,
   Mic, Volume2, VolumeX, Globe, ArrowRight, Landmark, BarChart3, ShoppingBag
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 import api from '../../services/api';
 
 export const DhenuChatWidget = () => {
@@ -11,6 +12,8 @@ export const DhenuChatWidget = () => {
   const [language, setLanguage] = useState('te'); // 'te', 'hi', 'en'
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const { itemCount } = useCart();
+  const location = useLocation();
   const [messages, setMessages] = useState([
     {
       sender: 'dhenu',
@@ -167,13 +170,17 @@ export const DhenuChatWidget = () => {
     }
   };
 
+  const isCartCapsuleVisible = itemCount > 0 && location.pathname !== '/cart' && !location.pathname.startsWith('/checkout');
+
   return (
     <>
       {/* Floating Toggle Button (Responsive positioning on mobile & desktop) */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-[74px] md:bottom-6 right-3 sm:right-4 md:right-6 z-40 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-emerald-800 via-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all group ring-2 sm:ring-4 ring-white/90"
+          className={`fixed right-3.5 sm:right-4 md:right-6 z-40 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-emerald-800 via-emerald-600 to-teal-700 text-white shadow-xl shadow-emerald-950/30 hover:scale-105 active:scale-95 transition-all duration-300 group ring-2 sm:ring-4 ring-white/90 ${
+            isCartCapsuleVisible ? 'bottom-[136px] md:bottom-6' : 'bottom-[72px] md:bottom-6'
+          }`}
           aria-label="Open Dhenu AI Kisan Assistant"
         >
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -185,8 +192,9 @@ export const DhenuChatWidget = () => {
             </div>
             <div className="text-[10px] text-emerald-100 font-medium">Voice & Agri Copilot</div>
           </div>
-          <span className="sm:hidden text-xs font-black tracking-tight">
-            Dhenu AI
+          <span className="sm:hidden text-xs font-black tracking-tight flex items-center gap-1">
+            <span>Dhenu</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
           </span>
         </button>
       )}

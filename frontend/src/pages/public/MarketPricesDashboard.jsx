@@ -345,13 +345,13 @@ export const MarketPricesDashboard = () => {
             </div>
 
             {/* State & District & Sort */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-emerald-600" />
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                 <select
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
                 >
                   {STATES.map((st) => (
                     <option key={st} value={st}>{st}</option>
@@ -360,19 +360,19 @@ export const MarketPricesDashboard = () => {
               </div>
 
               {/* Sort By Dropdown */}
-              <div className="flex items-center gap-1.5">
-                <BarChart2 className="w-4 h-4 text-slate-500" />
+              <div className="flex items-center gap-1.5 min-w-0">
+                <BarChart2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
                 >
                   <option value="default">Sort: Default</option>
                   <option value="price_desc">Price: High to Low</option>
                   <option value="price_asc">Price: Low to High</option>
-                  <option value="gainers">Biggest 24h Gainers 📈</option>
-                  <option value="losers">Biggest 24h Drops 📉</option>
-                  <option value="arrivals">Highest Arrivals (MT)</option>
+                  <option value="gainers">Gainers 📈</option>
+                  <option value="losers">Drops 📉</option>
+                  <option value="arrivals">Arrivals (MT)</option>
                 </select>
               </div>
 

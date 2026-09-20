@@ -33,28 +33,28 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className="space-y-5 sm:space-y-10 pb-20 sm:pb-24">
+    <div className="space-y-4 sm:space-y-8 pb-20 sm:pb-24">
       
-      {/* Interactive Live Government APMC Price Ticker */}
-      <div className="bg-slate-900 text-white py-2 px-3 sm:px-4 border-b border-emerald-500/30 overflow-hidden shadow-sm">
+      {/* 1. Interactive Live Government APMC Price Ticker */}
+      <div className="bg-slate-950 text-white py-1.5 px-3 sm:px-4 border-b border-emerald-500/20 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] sm:text-[10px] font-mono font-extrabold uppercase border border-emerald-500/40 flex-shrink-0">
+          <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] sm:text-[10px] font-mono font-black uppercase border border-emerald-500/30 flex-shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Live Ticker</span>
+            <span>Mandi Ticker</span>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar touch-scroll overscroll-contain text-xs font-mono whitespace-nowrap py-0.5">
+          <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto no-scrollbar touch-scroll overscroll-contain text-[11px] sm:text-xs font-mono whitespace-nowrap py-0.5">
             {govtTickers.length > 0 ? (
               govtTickers.map((t, idx) => (
                 <Link
                   key={idx}
                   to="/market-prices"
-                  className="flex items-center gap-1.5 sm:gap-2 hover:text-emerald-300 transition-colors group"
+                  className="flex items-center gap-1.5 hover:text-emerald-300 transition-colors group"
                 >
                   <span className="font-bold text-slate-200">{t.commodity}</span>
-                  <span className="text-slate-400 text-[10px] sm:text-[11px]">({t.market})</span>
+                  <span className="text-slate-400 text-[10px]">({t.market})</span>
                   <span className="text-emerald-400 font-extrabold">₹{t.modal_price_kg}/kg</span>
-                  <span className="text-slate-600 text-[10px]">|</span>
+                  <span className="text-slate-700 text-[10px]">|</span>
                 </Link>
               ))
             ) : (
@@ -64,56 +64,56 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* Cultural Demand Alert Banner */}
+      {/* 2. Cultural Demand Alert Banner - Sleek Festive Card */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <Link
           to="/demand-forecasting"
-          className="group block p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-900/90 via-orange-900/80 to-slate-900 text-white border border-amber-500/40 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
+          className="group block p-3 sm:p-4.5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-950 via-orange-950 to-slate-950 text-white border border-amber-500/30 shadow-md hover:shadow-xl transition-all active:scale-[0.99]"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
             <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-inner flex-shrink-0 mt-0.5">
                 <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-bounce" />
               </div>
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-amber-300">
-                    Cultural Demand Surge Alert
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-amber-300">
+                    Cultural Demand Surge
                   </span>
-                  <span className="px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full bg-amber-400 text-slate-950 text-[8px] sm:text-[9px] font-black uppercase">
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[8px] font-black uppercase">
                     Upcoming
                   </span>
                 </div>
-                <h4 className="font-extrabold text-xs sm:text-base text-white mt-0.5">
-                  Kartheeka Maasam (కార్తీక మాసం) – Vegetarian Demand Spike +75%
+                <h4 className="font-extrabold text-xs sm:text-base text-white mt-0.5 leading-snug">
+                  Kartheeka Maasam (కార్తీక మాసం) – Vegetarian Spike +75%
                 </h4>
-                <p className="text-[11px] sm:text-xs text-amber-100/80 mt-0.5 line-clamp-2 sm:line-clamp-none">
-                  Palak, Thotakura, Brinjal, and Raw Banana demand surges for 30 days. Explore sowing schedules &amp; hedging contracts.
+                <p className="text-[10px] sm:text-xs text-amber-100/80 mt-0.5 line-clamp-1 sm:line-clamp-none">
+                  Palak, Thotakura, Brinjal, and Raw Banana demand surges. View hedging &amp; sowing curves.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl sm:rounded-2xl bg-amber-500 text-slate-950 font-black text-xs shadow-md group-hover:bg-amber-400 transition-colors flex-shrink-0 min-h-[36px]">
-              <span>View AI Forecast Hub</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <div className="flex items-center justify-center gap-1 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-[11px] sm:text-xs shadow-md group-hover:bg-amber-400 transition-colors flex-shrink-0 self-end sm:self-center">
+              <span>View Forecast</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-3 sm:pt-6 pb-8 sm:pb-16 bg-gradient-to-b from-brand-50/80 via-emerald-50/40 to-slate-50 border-b border-slate-200/80">
+      {/* 3. Hero Section */}
+      <section className="relative overflow-hidden pt-1 sm:pt-4 pb-6 sm:pb-14 bg-gradient-to-b from-brand-50/70 via-emerald-50/30 to-slate-50 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-center">
             
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-bold shadow-xs border border-emerald-200">
-                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" />
-                <span>Next-Gen Agricultural Supply Chain Platform</span>
+            <div className="lg:col-span-7 space-y-3 sm:space-y-5 text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-bold border border-emerald-200 shadow-2xs">
+                <Sparkles className="w-3 h-3 text-emerald-600" />
+                <span>Next-Gen Direct Agricultural Supply Network</span>
               </div>
 
               <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.18] sm:leading-[1.15]">
-                Direct Farm Produce. <br />
+                Direct Farm Harvests. <br />
                 <span className="bg-gradient-to-r from-emerald-600 via-brand-600 to-teal-600 bg-clip-text text-transparent">
                   Zero Middlemen Spoilage.
                 </span>
@@ -124,19 +124,19 @@ export const Home = () => {
               </p>
 
               {/* Action Buttons */}
-              <div className="flex flex-col xs:flex-row flex-wrap items-stretch xs:items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-2">
+              <div className="flex flex-col xs:flex-row items-stretch xs:items-center justify-center lg:justify-start gap-2 sm:gap-3 pt-1 sm:pt-2">
                 <Link
                   to="/shop"
-                  className="w-full xs:w-auto px-5 sm:px-6 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black text-white bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition-all hover:scale-102 active:scale-95"
+                  className="w-full xs:w-auto px-5 sm:px-6 py-2.5 sm:py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black text-white bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Shop Fresh Produce</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <Link
                   to="/market-prices"
-                  className="w-full xs:w-auto px-4 sm:px-5 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-extrabold text-emerald-800 bg-emerald-100/80 border border-emerald-300 hover:bg-emerald-200/80 shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  className="w-full xs:w-auto px-4 sm:px-5 py-2.5 sm:py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-extrabold text-emerald-900 bg-emerald-100/90 border border-emerald-300 hover:bg-emerald-200 shadow-2xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
                 >
                   <Landmark className="w-4 h-4 text-emerald-700" />
                   <span>Live Mandi Rates</span>
@@ -144,26 +144,26 @@ export const Home = () => {
 
                 <Link
                   to="/demand-forecasting"
-                  className="w-full xs:w-auto px-4 sm:px-5 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-extrabold text-teal-800 bg-teal-100/80 border border-teal-300 hover:bg-teal-200/80 shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  className="w-full xs:w-auto px-4 sm:px-5 py-2.5 sm:py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs sm:text-sm font-extrabold text-teal-900 bg-teal-100/90 border border-teal-300 hover:bg-teal-200 shadow-2xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
                 >
                   <BarChart2 className="w-4 h-4 text-teal-700" />
-                  <span>Demand Forecasts</span>
+                  <span>AI Demand Matrix</span>
                 </Link>
               </div>
 
               {/* Key Trust Metrics */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-slate-200 text-center sm:text-left">
-                <div className="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/60 shadow-2xs sm:shadow-none">
-                  <div className="text-lg sm:text-2xl font-black text-slate-900 font-mono">100%</div>
-                  <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">Escrow Protected</div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 sm:pt-5 border-t border-slate-200 text-center sm:text-left">
+                <div className="bg-white/80 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/80 shadow-2xs sm:shadow-none">
+                  <div className="text-base sm:text-2xl font-black text-slate-900 font-mono">100%</div>
+                  <div className="text-[9px] sm:text-xs text-slate-500 font-medium mt-0.5">Escrow Protected</div>
                 </div>
-                <div className="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/60 shadow-2xs sm:shadow-none">
-                  <div className="text-lg sm:text-2xl font-black text-emerald-600 font-mono">&lt;6 hrs</div>
-                  <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">Harvest to Hub</div>
+                <div className="bg-white/80 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/80 shadow-2xs sm:shadow-none">
+                  <div className="text-base sm:text-2xl font-black text-emerald-600 font-mono">&lt;6 hrs</div>
+                  <div className="text-[9px] sm:text-xs text-slate-500 font-medium mt-0.5">Harvest to Hub</div>
                 </div>
-                <div className="bg-white/70 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/60 shadow-2xs sm:shadow-none">
-                  <div className="text-lg sm:text-2xl font-black text-solar-600 font-mono">0% Loss</div>
-                  <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">Solar Rescue</div>
+                <div className="bg-white/80 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-200/80 shadow-2xs sm:shadow-none">
+                  <div className="text-base sm:text-2xl font-black text-solar-600 font-mono">0% Loss</div>
+                  <div className="text-[9px] sm:text-xs text-slate-500 font-medium mt-0.5">Solar Rescue</div>
                 </div>
               </div>
 

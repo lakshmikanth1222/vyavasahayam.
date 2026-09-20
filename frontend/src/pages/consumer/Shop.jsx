@@ -57,24 +57,24 @@ export const Shop = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8 space-y-4 sm:space-y-8">
       
       {/* Visual Impact Hero Section - Mobile-First Responsive */}
-      <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 text-white p-4.5 sm:p-8 lg:p-10 shadow-2xl border border-emerald-500/20 overflow-hidden">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 text-white p-4 sm:p-8 lg:p-10 shadow-2xl border border-emerald-500/20 overflow-hidden">
         {/* Background Ambient Glows */}
         <div className="absolute top-0 right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-60 sm:w-80 h-60 sm:h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+        <div className="relative z-10 grid lg:grid-cols-12 gap-5 lg:gap-8 items-center">
           
           {/* Left Hero Content */}
-          <div className="lg:col-span-7 space-y-3.5 sm:space-y-4">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] sm:text-xs font-bold border border-emerald-400/30 backdrop-blur-md">
+          <div className="lg:col-span-7 space-y-3 sm:space-y-4">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] sm:text-xs font-bold border border-emerald-400/30 backdrop-blur-md">
               <Landmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 flex-shrink-0" />
-              <span className="truncate">Official Government APMC & Rythu Bazar Daily Rates Active</span>
+              <span className="truncate">Government APMC & Rythu Bazar Daily Rates Active</span>
             </div>
 
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.18] sm:leading-tight">
+            <h1 className="text-xl xs:text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.18] sm:leading-tight">
               Fresh Farm Marketplace. <br />
               <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
                 Direct Harvest. Mandi Parity.
@@ -85,42 +85,50 @@ export const Shop = () => {
               Buy verified, AI-graded harvests directly from local FPOs with 100% transparent comparison against daily Government APMC &amp; Rythu Bazar benchmarks.
             </p>
 
-            {/* Quick Hero Search Input - 100% width, touch-friendly 48-52px height */}
-            <div className="relative w-full max-w-md pt-1">
-              <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 sm:left-4 top-4 sm:top-4.5 pointer-events-none" />
+            {/* Quick Hero Search Input */}
+            <div className="relative w-full max-w-md pt-0.5">
+              <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search tomato, chilli, palak, or onion..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-3.5 min-h-[48px] sm:min-h-[52px] text-xs sm:text-sm rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-emerald-200/60 focus:bg-white/15 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none shadow-inner transition-all"
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3.5 min-h-[44px] sm:min-h-[50px] text-xs sm:text-sm rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-emerald-200/60 focus:bg-white/15 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none shadow-inner transition-all"
               />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-emerald-300 hover:text-white font-bold"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
             {/* Micro Stats Row - 3 equal width columns */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 border-t border-white/10 max-w-md text-left">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-2.5 sm:pt-3 border-t border-white/10 max-w-md text-left">
               <div className="bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none text-center sm:text-left">
-                <span className="text-base sm:text-xl font-black font-mono text-emerald-400 block">{products.length || 18}+</span>
-                <span className="text-[10px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Farm Batches</span>
+                <span className="text-sm sm:text-xl font-black font-mono text-emerald-400 block">{products.length || 18}+</span>
+                <span className="text-[9px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Farm Batches</span>
               </div>
               <div className="bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none text-center sm:text-left">
-                <span className="text-base sm:text-xl font-black font-mono text-amber-300 block">100%</span>
-                <span className="text-[10px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Escrow Protected</span>
+                <span className="text-sm sm:text-xl font-black font-mono text-amber-300 block">100%</span>
+                <span className="text-[9px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Escrow Safe</span>
               </div>
               <div className="bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none text-center sm:text-left">
-                <span className="text-base sm:text-xl font-black font-mono text-teal-300 block">&lt;6 hrs</span>
-                <span className="text-[10px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Harvest to Hub</span>
+                <span className="text-sm sm:text-xl font-black font-mono text-teal-300 block">&lt;6 hrs</span>
+                <span className="text-[9px] sm:text-[11px] text-emerald-200/80 block font-medium leading-tight mt-0.5">Harvest to Hub</span>
               </div>
             </div>
           </div>
 
           {/* Right Hero Widget: Live Price Arbitrage Card */}
           <div className="lg:col-span-5">
-            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl space-y-3.5 sm:space-y-4">
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-emerald-300">
+            <div className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-300">
                     LIVE APMC VS FARM GATE
                   </span>
                 </div>
@@ -130,33 +138,33 @@ export const Shop = () => {
               </div>
 
               {/* Sample Live Benchmark Cards Stacked Vertically */}
-              <div className="space-y-2 sm:space-y-2.5 text-xs">
-                <div className="p-3 rounded-xl sm:rounded-2xl bg-black/30 border border-white/10 flex items-center justify-between gap-2">
+              <div className="space-y-2 text-xs">
+                <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-black/30 border border-white/10 flex items-center justify-between gap-2">
                   <div>
                     <h4 className="font-extrabold text-white text-xs sm:text-sm">Hybrid Vine Tomato</h4>
-                    <span className="text-[10px] sm:text-[11px] text-emerald-200/70 block mt-0.5">Govt APMC: ₹22.00/kg</span>
+                    <span className="text-[10px] text-emerald-200/70 block mt-0.5">Govt APMC: ₹22.00/kg</span>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span className="font-mono font-black text-emerald-400 text-sm sm:text-base">₹20.00/kg</span>
-                    <span className="text-[9px] sm:text-[10px] text-emerald-300 font-extrabold block">Save ₹2.00/kg (9%)</span>
+                    <span className="font-mono font-black text-emerald-400 text-xs sm:text-base">₹20.00/kg</span>
+                    <span className="text-[9px] text-emerald-300 font-extrabold block">Save ₹2.00/kg (9%)</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl sm:rounded-2xl bg-black/30 border border-white/10 flex items-center justify-between gap-2">
+                <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-black/30 border border-white/10 flex items-center justify-between gap-2">
                   <div>
                     <h4 className="font-extrabold text-white text-xs sm:text-sm">Guntur Green Chilli</h4>
-                    <span className="text-[10px] sm:text-[11px] text-emerald-200/70 block mt-0.5">Govt APMC: ₹65.00/kg</span>
+                    <span className="text-[10px] text-emerald-200/70 block mt-0.5">Govt APMC: ₹65.00/kg</span>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span className="font-mono font-black text-emerald-400 text-sm sm:text-base">₹58.00/kg</span>
-                    <span className="text-[9px] sm:text-[10px] text-emerald-300 font-extrabold block">Save ₹7.00/kg (11%)</span>
+                    <span className="font-mono font-black text-emerald-400 text-xs sm:text-base">₹58.00/kg</span>
+                    <span className="text-[9px] text-emerald-300 font-extrabold block">Save ₹7.00/kg (11%)</span>
                   </div>
                 </div>
               </div>
 
               <Link
                 to="/market-prices"
-                className="w-full py-3 min-h-[44px] rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-98"
+                className="w-full py-2.5 sm:py-3 min-h-[42px] sm:min-h-[44px] rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-98"
               >
                 <Landmark className="w-4 h-4 text-slate-950 flex-shrink-0" />
                 <span className="truncate">Explore Full 93+ Govt Crop Bulletin</span>
