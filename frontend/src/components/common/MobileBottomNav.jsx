@@ -14,7 +14,7 @@ export const MobileBottomNav = () => {
   let dashboardLabel = 'Login';
 
   if (isAuthenticated) {
-    if (role === 'FARMER') {
+    if (role === 'FARMER' || role === 'FPO') {
       dashboardPath = '/farmer/dashboard';
       dashboardLabel = 'Farmer';
     } else if (role === 'BUYER_B2B') {
@@ -23,10 +23,10 @@ export const MobileBottomNav = () => {
     } else if (role === 'ADMIN') {
       dashboardPath = '/admin/dashboard';
       dashboardLabel = 'Admin';
-    } else if (role === 'OPERATOR') {
+    } else if (role === 'OPERATOR' || role === 'COLLECTION_CENTER') {
       dashboardPath = '/operator/dashboard';
       dashboardLabel = 'Operator';
-    } else if (role === 'DELIVERY') {
+    } else if (role === 'DELIVERY' || role === 'DELIVERY_PARTNER') {
       dashboardPath = '/delivery/dashboard';
       dashboardLabel = 'Fleet';
     } else {
@@ -49,7 +49,7 @@ export const MobileBottomNav = () => {
       badge: 'Live'
     },
     {
-      to: '/demand-forecasting',
+      to: '/demand-forecast',
       label: 'Forecast',
       icon: BarChart3,
       badge: 'AI'
