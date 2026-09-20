@@ -120,20 +120,20 @@ export const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-3 lg:gap-6">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs w-full max-w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4 lg:gap-6">
             
             {/* 1. Brand Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-all">
-                <Sprout className="w-5 h-5" />
+            <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-all">
+                <Sprout className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 flex items-center gap-1 leading-none">
+                <span className="text-base sm:text-xl font-black tracking-tight text-slate-900 flex items-center gap-0.5 leading-none">
                   Vyava<span className="text-emerald-600">Sahayam</span>
                 </span>
-                <span className="text-[9px] font-extrabold text-emerald-700 tracking-wider uppercase mt-0.5">
+                <span className="text-[8px] sm:text-[9px] font-extrabold text-emerald-700 tracking-wider uppercase mt-0.5">
                   Direct Farm Network
                 </span>
               </div>
@@ -304,11 +304,11 @@ export const Navbar = () => {
               {/* Kisan Voice IVR Telephony Simulation */}
               <button
                 onClick={() => setVoiceModalOpen(true)}
-                className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-xs font-extrabold transition-all whitespace-nowrap active:scale-95 shadow-2xs inline-flex items-center gap-1.5"
+                className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-[11px] sm:text-xs font-extrabold transition-all whitespace-nowrap active:scale-95 shadow-2xs inline-flex items-center gap-1 sm:gap-1.5"
                 title="Simulate Voice IVR for Farmers (Telugu / Hindi / English)"
               >
                 <PhoneCall className="w-3.5 h-3.5 text-amber-600 animate-pulse flex-shrink-0" />
-                <span className="hidden sm:inline">Voice IVR</span>
+                <span className="hidden xs:inline">Voice IVR</span>
                 <span className="hidden md:inline px-1 py-0.2 rounded bg-amber-200/80 text-[9px] text-amber-900 font-bold">
                   తెలుగు/हिं
                 </span>
@@ -318,12 +318,12 @@ export const Navbar = () => {
               {isAuthenticated && (
                 <Link
                   to="/notifications"
-                  className="relative p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  className="relative p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
                   title="Notification Center"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-bounce">
                       {unreadCount}
                     </span>
                   )}
@@ -333,12 +333,12 @@ export const Navbar = () => {
               {/* Shopping Cart (B2C) */}
               <Link
                 to="/cart"
-                className="relative p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                className="relative p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
                 title="Shopping Cart"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
                     {itemCount}
                   </span>
                 )}
@@ -349,9 +349,9 @@ export const Navbar = () => {
                 <div className="relative" ref={profileDropdownRef}>
                   <button
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                    className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 active:scale-95"
+                    className="flex items-center gap-1.5 sm:gap-2 pl-1.5 pr-1 py-1 rounded-xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 active:scale-95"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xs font-black shadow-sm">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-[11px] sm:text-xs font-black shadow-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     

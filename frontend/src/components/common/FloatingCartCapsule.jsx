@@ -19,10 +19,10 @@ export const FloatingCartCapsule = () => {
   }, 0);
 
   return (
-    <div className="fixed bottom-16 md:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-30 animate-slideUp">
+    <div className="fixed bottom-[74px] md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-30 animate-slideUp">
       <Link
         to="/cart"
-        className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/95 backdrop-blur-xl text-white shadow-2xl border border-white/20 hover:bg-slate-900 transition-all group active:scale-98"
+        className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-slate-950/95 backdrop-blur-xl text-white shadow-2xl border border-white/20 hover:bg-slate-900 transition-all group active:scale-98"
       >
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">

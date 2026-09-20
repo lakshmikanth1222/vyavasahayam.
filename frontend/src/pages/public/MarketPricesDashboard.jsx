@@ -204,19 +204,20 @@ export const MarketPricesDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-8">
       
       {/* Live Market Changes Ticker Bar */}
       <div className="max-w-7xl mx-auto">
-        <div className="bg-slate-900 text-white rounded-2xl p-2.5 shadow-md flex items-center gap-3 overflow-hidden border border-slate-800">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-bold shrink-0 border border-emerald-500/30">
+        <div className="bg-slate-900 text-white rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-md flex items-center gap-2 sm:gap-3 overflow-hidden border border-slate-800">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-xl bg-emerald-500/20 text-emerald-400 text-[10px] sm:text-xs font-bold shrink-0 border border-emerald-500/30">
             <Activity className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
-            <span>LIVE CHANGES</span>
+            <span className="hidden xs:inline">LIVE CHANGES</span>
+            <span className="xs:hidden">LIVE</span>
           </div>
 
-          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-0.5 text-xs">
+          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar touch-scroll overscroll-contain py-0.5 text-xs">
             {prices.slice(0, 12).map((p, idx) => (
-              <div key={idx} className="flex items-center gap-2 shrink-0 border-r border-slate-800 pr-6">
+              <div key={idx} className="flex items-center gap-1.5 sm:gap-2 shrink-0 border-r border-slate-800 pr-4 sm:pr-6">
                 <span className="font-extrabold text-slate-200">{p.commodity}</span>
                 <span className="font-mono font-bold text-emerald-400">₹{p.modal_price_kg}/kg</span>
                 {p.daily_change_pct > 0 ? (
@@ -232,7 +233,7 @@ export const MarketPricesDashboard = () => {
                     MSP 🔒
                   </span>
                 )}
-                <span className="text-[10px] text-slate-400">{p.market}</span>
+                <span className="text-[10px] text-slate-400">({p.market})</span>
               </div>
             ))}
           </div>
@@ -240,48 +241,48 @@ export const MarketPricesDashboard = () => {
       </div>
 
       {/* Hero & Banner */}
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-2xl sm:rounded-3xl p-4.5 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden">
           
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 sm:gap-6">
+            <div className="space-y-2.5 sm:space-y-3 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                Live Agmarknet & DMI Government Feeds
+                <span>Live Agmarknet &amp; DMI Government Feeds</span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                Daily Government Agricultural Prices & MSP Dashboard
+              <h1 className="text-xl xs:text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+                Daily Government Agricultural Prices &amp; MSP Dashboard
               </h1>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Complete daily price changes, variety modal rates, APMC mandi arrival volumes, and central Minimum Support Price (MSP) benchmarks reported directly from the Ministry of Agriculture & Farmers Welfare (Data.gov.in / Agmarknet).
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Complete daily price changes, variety modal rates, APMC mandi arrival volumes, and central Minimum Support Price (MSP) benchmarks reported directly from the Ministry of Agriculture &amp; Farmers Welfare (Data.gov.in / Agmarknet).
               </p>
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
               <button
                 onClick={fetchPrices}
                 disabled={loading}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 text-emerald-400 ${loading ? 'animate-spin' : ''}`} />
-                <span>Sync Live Govt Feeds</span>
+                <span>Sync Live Feeds</span>
               </button>
 
               <button
                 onClick={handleExportCSV}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
               >
                 <Download className="w-4 h-4 text-teal-400" />
-                <span>Download CSV</span>
+                <span>Export CSV</span>
               </button>
 
               <Link
                 to="/farmer/listings/new"
-                className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95"
+                className="px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl sm:rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95"
               >
                 <Sparkles className="w-4 h-4 text-slate-950" />
                 <span>List Produce at Fair Rate</span>
@@ -290,21 +291,21 @@ export const MarketPricesDashboard = () => {
           </div>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Reporting APMC Mandis</span>
-              <span className="text-xl sm:text-2xl font-extrabold text-white font-mono">{mandiCount || 18} Mandis</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-[10px] sm:text-xs text-slate-400 block font-medium">Reporting Mandis</span>
+              <span className="text-base sm:text-2xl font-black text-white font-mono mt-0.5 block">{mandiCount || 18} Mandis</span>
             </div>
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Commodities Monitored</span>
-              <span className="text-xl sm:text-2xl font-extrabold text-emerald-300 font-mono">{commoditiesCount || 44} Crops</span>
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-[10px] sm:text-xs text-slate-400 block font-medium">Commodities</span>
+              <span className="text-base sm:text-2xl font-black text-emerald-300 font-mono mt-0.5 block">{commoditiesCount || 44} Crops</span>
             </div>
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Central MSP Benchmarks</span>
-              <span className="text-xl sm:text-2xl font-extrabold text-brand-400 font-mono">{mspCount || 15} Commodities</span>
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-[10px] sm:text-xs text-slate-400 block font-medium">MSP Benchmarks</span>
+              <span className="text-base sm:text-2xl font-black text-brand-400 font-mono mt-0.5 block">{mspCount || 15} Crops</span>
             </div>
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">Last Synced</span>
+            <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl">
+              <span className="text-[10px] sm:text-xs text-slate-400 block font-medium">Last Synced</span>
               <span className="text-xs sm:text-sm font-semibold text-slate-200 block mt-1 font-mono">
                 {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Today
               </span>

@@ -26,20 +26,20 @@ export const DemoSwitcher = () => {
   };
 
   return (
-    <div className="bg-slate-950 text-slate-200 py-1.5 px-3 sm:px-4 text-xs border-b border-slate-800/80 shadow-inner">
-      <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3">
+    <div className="bg-slate-950 text-slate-200 py-1 sm:py-1.5 px-2.5 sm:px-4 text-xs border-b border-slate-800/80 shadow-inner w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-3">
         
         {/* Left Indicator */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-black text-[9px] sm:text-[10px] uppercase tracking-wider border border-emerald-500/30 whitespace-nowrap">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-black text-[9px] sm:text-[10px] uppercase tracking-wider border border-emerald-500/30 whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="hidden xs:inline">Interactive Demo</span>
-            <span className="xs:hidden">Demo</span>
+            <span className="hidden sm:inline">Interactive Demo</span>
+            <span className="sm:hidden">Demo</span>
           </div>
         </div>
 
         {/* Role Selector Pills */}
-        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1 touch-scroll overscroll-contain">
           {roles.map((item) => {
             const Icon = item.icon;
             const isActive = role === item.key;
@@ -47,10 +47,10 @@ export const DemoSwitcher = () => {
               <button
                 key={item.key}
                 onClick={() => handleSwitch(item)}
-                className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-xl transition-all font-extrabold text-[10px] sm:text-[11px] whitespace-nowrap active:scale-95 flex-shrink-0 ${
+                className={`inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl transition-all font-black text-[10px] sm:text-[11px] whitespace-nowrap active:scale-95 flex-shrink-0 ${
                   isActive
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 ring-1 ring-white/40'
-                    : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800 ' + item.color
+                    : 'bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800/90 ' + item.color
                 }`}
               >
                 <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />

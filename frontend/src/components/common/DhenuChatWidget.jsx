@@ -173,11 +173,11 @@ export const DhenuChatWidget = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-brand-700 via-emerald-600 to-teal-700 text-white shadow-xl shadow-brand-600/30 hover:scale-105 active:scale-95 transition-all group ring-4 ring-white/80"
+          className="fixed bottom-[74px] md:bottom-6 right-3 sm:right-4 md:right-6 z-40 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-emerald-800 via-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all group ring-2 sm:ring-4 ring-white/90"
           aria-label="Open Dhenu AI Kisan Assistant"
         >
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white group-hover:rotate-12 transition-transform" />
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:rotate-12 transition-transform" />
           </div>
           <div className="text-left hidden sm:block">
             <div className="text-xs font-extrabold leading-tight flex items-center gap-1.5">
@@ -185,7 +185,7 @@ export const DhenuChatWidget = () => {
             </div>
             <div className="text-[10px] text-emerald-100 font-medium">Voice & Agri Copilot</div>
           </div>
-          <span className="sm:hidden text-xs font-extrabold">
+          <span className="sm:hidden text-xs font-black tracking-tight">
             Dhenu AI
           </span>
         </button>

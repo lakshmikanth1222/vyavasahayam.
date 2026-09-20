@@ -68,7 +68,7 @@ export const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1 pt-1 pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))] flex items-stretch justify-around">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.exact 
@@ -79,14 +79,14 @@ export const MobileBottomNav = () => {
           <NavLink
             key={item.to}
             to={item.to}
-            className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all ${
+            className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-200 min-w-[58px] min-h-[44px] active:scale-95 ${
               isActive
-                ? 'text-emerald-700 font-extrabold scale-105'
+                ? 'text-emerald-700 font-extrabold bg-emerald-50/90 shadow-2xs'
                 : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
             <div className="relative">
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] text-emerald-600' : 'stroke-[1.75px]'}`} />
+              <Icon className={`w-5 h-5 transition-transform ${isActive ? 'stroke-[2.5px] text-emerald-600 scale-110' : 'stroke-[1.75px]'}`} />
 
               {/* Live Badge */}
               {item.badge === 'Live' && (
@@ -98,26 +98,26 @@ export const MobileBottomNav = () => {
 
               {/* AI Badge */}
               {item.badge === 'AI' && (
-                <span className="absolute -top-1.5 -right-3 px-1 py-0.2 rounded-full bg-teal-500 text-white text-[8px] font-black leading-none shadow-sm">
+                <span className="absolute -top-1.5 -right-3 px-1 py-0.2 rounded-full bg-teal-500 text-white text-[8px] font-black leading-none shadow-xs">
                   AI
                 </span>
               )}
 
               {/* Cart Count Badge */}
               {item.cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                   {item.cartCount}
                 </span>
               )}
             </div>
 
-            <span className="text-[10px] mt-1 tracking-tight leading-none">
+            <span className={`text-[10px] mt-1 tracking-tight leading-none ${isActive ? 'font-black text-emerald-800' : 'font-medium text-slate-500'}`}>
               {item.label}
             </span>
 
-            {/* Active Pill Indicator */}
+            {/* Active Dot Indicator */}
             {isActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-0.5" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-0.5 animate-fadeIn" />
             )}
           </NavLink>
         );
